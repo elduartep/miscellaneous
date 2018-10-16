@@ -2,7 +2,7 @@
 spherical void finding algorithm and analyzing routines
 
 
-spherical void finder
+## spherical void finder
 requires: a tracer catalog
 returns: an spherical void catalog
 

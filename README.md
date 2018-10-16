@@ -13,7 +13,7 @@ returns: an spherical void catalog
 
 ## desity profile DP
 
-compute density profile
+### compute density profile
 requires: a void catalog and the original tracers catalog
 returns: the spherical averaged density profile for stacked voids
 

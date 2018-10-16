@@ -11,7 +11,9 @@ returns: an spherical void catalog
 
 
 
-compute density profile or DP
+## desity profile DP
+
+compute density profile
 requires: a void catalog and the original tracers catalog
 returns: the spherical averaged density profile for stacked voids
 
@@ -28,6 +30,7 @@ returns: the best fit coefficients (given an expression for the DP parameters de
 
 
 
+## abundance AB
 
 compute abundance or AB
 requires: a void catalog
@@ -45,7 +48,7 @@ returns: the best fit coefficients (given an expression for the AB parameters de
 
 
 
-
+## applay AB and DP learned expressions
 
 infer cosmology
 requires: coefficients of the abundace and density profile fits, AB and DP measurements for the different MG cases

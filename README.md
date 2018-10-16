@@ -1,5 +1,5 @@
 # voids
-spherical void finding algorithm and analyzing routines
+spherical void finding algorithm and analysis routines
 
 
 ## spherical void finder

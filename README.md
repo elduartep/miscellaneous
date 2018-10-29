@@ -83,3 +83,18 @@ requires: coefficients of the abundace and density profile fits, AB and DP measu
 
 return: given the coefficients that describe the parameters of the AB and DP fits, returns the value of the MG parameter for each MG case
 
+
+
+
+
+
+
+
+
+# Void and halo Profiles
+Perfiles_2018_octantes_velocidad.c
+
+
+# Power Spectrum and bias
+bias.cpp
+

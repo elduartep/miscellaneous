@@ -98,3 +98,6 @@ Perfiles_2018_octantes_velocidad.c
 # Power Spectrum and bias
 bias.cpp
 
+
+# Spherical Halo Finder
+HaloFinder.c

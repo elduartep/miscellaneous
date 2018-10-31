@@ -94,9 +94,13 @@ return: given the coefficients that describe the parameters of the AB and DP fit
 # Void and halo Profiles
 Perfiles_2018_octantes_velocidad.c
 
+computes halo density profiles and voids density profiles
+
 
 # Power Spectrum and bias
-bias.cpp
+Bias.c
+
+computes matter power spectrum, halo bias and voids bias
 
 
 # Spherical Halo Finder

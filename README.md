@@ -98,7 +98,7 @@ computes halo density profiles and voids density profiles
 
 
 # Power Spectrum and bias
-Bias.c
+Bias_pragma_lb.c
 
 computes matter power spectrum, halo bias and voids bias
 

@@ -74,6 +74,19 @@ returns: the best fit coefficients (given an expression for the AB parameters de
 
 
 
+## Bias
+
+### Trend
+cosmo7_mcmc_bias.c
+
+### best parameters
+cosmo7_desciende_bias.c
+
+
+
+
+
+
 ## applay AB and DP learned expressions
 
 ### infer cosmology
@@ -105,3 +118,7 @@ computes matter power spectrum, halo bias and voids bias
 
 # Spherical Halo Finder
 HaloFinder.c
+
+
+# Correlation Function
+correl_pix_nuevo.cpp

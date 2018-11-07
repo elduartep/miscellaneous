@@ -74,7 +74,7 @@ returns: the best fit coefficients (given an expression for the AB parameters de
 
 
 
-## Bias
+## Linear Void Bias
 
 ### Trend
 cosmo7_mcmc_bias.c

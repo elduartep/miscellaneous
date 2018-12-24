@@ -3,7 +3,7 @@ spherical void finding algorithm and analysis routines
 
 
 ## spherical void finder
-VoidFinderPrueba3.c
+VoidFinderPrueba2.c
 
 requires: a tracer catalog
 

@@ -14,7 +14,7 @@ returns: an spherical void catalog
 
 
 
-## desity profile DP
+## Desity Profile (DP)
 
 ### compute density profile
 Perfiles_2018_octantes.c
@@ -44,7 +44,7 @@ returns: the best fit coefficients (given an expression for the DP parameters de
 
 
 
-## abundance AB
+## Abundance (AB)
 
 ### compute abundance or AB
 cosmo7_FuncionRadioMide.c
@@ -74,7 +74,7 @@ returns: the best fit coefficients (given an expression for the AB parameters de
 
 
 
-## Linear Void Bias
+## Linear Void Bias (LB)
 
 ### Trend
 cosmo7_mcmc_bias.c

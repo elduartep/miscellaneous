@@ -79,7 +79,9 @@ returns: the best fit coefficients (given an expression for the AB parameters de
 
 ### Measure
 Bias_pragma_lb.c
+
 requires: matter and void catalogs
+
 return: linear void-matter bias
 
 ### Trend
@@ -128,5 +130,6 @@ HaloFinder.c
 
 # Correlation Function
 correl_pix_nuevo.cpp  measure
+
 cosmo7_matter_correlation_function.c  linear-theory
 

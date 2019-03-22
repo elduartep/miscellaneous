@@ -8,7 +8,7 @@
 #include "../l/nr3.h"
 #include "../l/interp_1d.h"
 
-#include "../l/cosmo7_parametros.h"
+#include "cosmo8_parametros.h"
 
   using namespace std;
 
@@ -28,23 +28,20 @@
   const int xyerrorbars=0;
 
 
-  const int BI=0;				//	numero de puntos de un parametro
+  const int BI=0;				//	burn-in, number of steeps before star printing the chain
   const int ciclo_lineal=400;
   const int tercio_ciclo_lineal=350;
   const double disminuye=0.869;
   const double aumenta=1.15;
 
 
-
-  double lateral_param_densidad[3];	//	valores laterales
+  double lateral_param_bd[3];	//	valores laterales
   double lateral_chi[3];
   int n_avanza;				//	pasos que desecha antes de colocar un nuevo eslabón
 
 
-
-
-  double sigma_param_densidad[Npd][Ncd],chi_actual; 	//	variables basicas
-  double delta_param_densidad[Npd][Ncd],param_old[Npd][Ncd];	//	para evolucion lineal
+  double sigma_param_densidad[Npbd],chi_actual; 	//	variables basicas
+  double delta_param_densidad[Npbd],param_old[Npbd];	//	para evolucion lineal
 
 
   double sigma_inv[theories],sigma_inv_max[theories],sigma_inv_min[theories];
@@ -53,42 +50,56 @@
 
 
 
+
+
+
+
 void carga(void){
+//	densidad
 if(first_theory==0){
-  param_densidad[0][0]=13.9235;	// alpha
-  param_densidad[0][1]=0.36234;
-  param_densidad[0][2]=1.e-8;
-  param_densidad[0][3]=-3.0869;
-  param_densidad[0][4]=1.20586;	// beta
+  param_densidad[0]=12.;	// alpha
+  param_densidad[1]=13.5;	// beta
+  param_densidad[2]=1.09;	// c
+  param_densidad[3]=1.3;	// G
+  param_densidad[4]=0.82;	// A1
+  param_densidad[5]=0.27;	// A2
+  param_densidad[6]=6.;		// B1
+  param_densidad[7]=0.69;	// B2
 
-  param_densidad[1][0]=0.09273;	// rv
-  param_densidad[1][1]=0.25986;
-  param_densidad[1][2]=1.634;
 
-  param_densidad[2][0]=-0.9631;	// G
-  param_densidad[2][1]=3.4017e-02;
-  param_densidad[2][2]=1.e-8;
-  param_densidad[2][3]=1.60655;
-  param_densidad[2][4]=-0.25995;
 }
 if(first_theory==3){
-  param_densidad[0][0]=10.71;	// alpha
-  param_densidad[0][1]=0.685;
-  param_densidad[0][2]=0.1;
-  param_densidad[0][3]=-2.9;
-  param_densidad[0][4]=1.205;	// beta
-
-  param_densidad[1][0]=0.054;	// rv
-  param_densidad[1][1]=0.319;
-  param_densidad[1][2]=1.375;
-
-  param_densidad[2][0]=-1.248;	// G
-  param_densidad[2][1]=8.23e-02;
-  param_densidad[2][2]=-5.12e-03;
-  param_densidad[2][3]=1.6;
-  param_densidad[2][4]=-0.255;
+  param_densidad[0]=12.;	// alpha
+  param_densidad[1]=13.5;	// beta
+  param_densidad[2]=1.09;	// c
+  param_densidad[3]=1.3;	// G
+  param_densidad[4]=0.82;	// A1
+  param_densidad[5]=0.27;	// A2
+  param_densidad[6]=6.;		// B1
+  param_densidad[7]=0.69;	// B2
 }
 
+//	bias
+//	f(R)
+//	c=-0.15895 + 1.75e-4 log10(3e-10 + fR0)
+  if(first_theory==0){
+    param_bias[Npd+0]=-0.159;	// c
+    param_bias[Npd+1]=1.772e-4;	// c
+    param_bias[Npd+2]=3.72e-10;	// c
+    param_bias[Npd+3]=7.15;	// b
+    param_bias[Npd+4]=47.14;	// b
+    param_bias[Npd+5]=0.611;	// a
+  }
+//	symmetron
+//	c=-0.1705 + 6.333e-4 z + ..zz
+  if(first_theory==3){
+    param_bias[Npd+0]=-0.1703;	// c
+    param_bias[Npd+1]=4.44e-4;	// c
+    param_bias[Npd+2]=6.4e-5;	// c
+    param_bias[Npd+3]=7.6;	// b
+    param_bias[Npd+4]=47.06;	// b
+    param_bias[Npd+5]=0.6178;	// a
+  }
 
 
 int n_salta;
@@ -97,8 +108,8 @@ if(segunda_vez==1){
   char nomAr[410];
   sprintf(nomAr,"lista_todo_libre_%d_%d.txt",first_theory,last_theory);
   NOM=fopen(nomAr,"r");
-  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n"
-,&n_salta,&co,&param_densidad[0][0],&param_densidad[0][1],&param_densidad[0][2],&param_densidad[0][3],&param_densidad[0][4],&param_densidad[1][0],&param_densidad[1][1],&param_densidad[1][2],&param_densidad[1][3],&param_densidad[1][4],&param_densidad[2][0],&param_densidad[2][1],&param_densidad[2][2],&param_densidad[2][3],&param_densidad[2][4])!=EOF);
+  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le\n"
+,&n_salta,&co,&param_bd[0],&param_bd[1],&param_bd[2],&param_bd[3],&param_bd[4],&param_bd[5],&param_bd[6],&param_bd[7],&param_bd[8],&param_bd[9],&param_bd[10],&param_bd[11])!=EOF);
   fclose(NOM);
   lateral_chi[0]=co;
 }
@@ -107,9 +118,8 @@ printf("co=%le\n",co);
 
 
 #if sigma_propto_param > 0
-  for(int aux_param=0;aux_param<Npd;aux_param++){
-  for(int aux_coeff=0;aux_coeff<Ncd;aux_coeff++){
-    sigma_param_densidad[aux_param][aux_coeff]=0.1*abs(param_densidad[aux_param][aux_coeff]);}}
+  for(int aux_param=0;aux_param<Npbd;aux_param++){
+    sigma_param_bd[aux_param]=0.1*abs(param_densidad[aux_param]);}
 #endif
 }
 
@@ -123,28 +133,6 @@ printf("co=%le\n",co);
 
 
 
-void ParametrosPerfilDesc(int t,int s){
-double x,x2;
-  if(first_theory==0){
-      x=log10(param_densidad[0][2]+parametro[t]);
-  alpha=param_densidad[0][0] +param_densidad[0][1]*x
-        +param_densidad[0][3]*sigma_stack[t][s];
-   beta=param_densidad[0][4]*alpha;
-      B=param_densidad[1][0]+param_densidad[1][1]*pow(sigma_stack[t][s],-param_densidad[1][2]);
-        A=(param_densidad[2][0] +param_densidad[2][1]*x
-         +param_densidad[2][3]*sigma_stack[t][s] 
-         +param_densidad[2][4]*pow(sigma_stack[t][s],2)) *pow(B,1./param_densidad[0][4]);}
-  else if(first_theory==3){
-      x=parametro[t];
-     x2=x*x;
-  alpha=param_densidad[0][0] +param_densidad[0][1]*x +param_densidad[0][2]*x2
-        +param_densidad[0][3]*sigma_stack[t][s];
-   beta=param_densidad[0][4]*alpha;
-      B=param_densidad[1][0]+param_densidad[1][1]*pow(sigma_stack[t][s],-param_densidad[1][2]);
-      A=(param_densidad[2][0] +param_densidad[2][1]*x +param_densidad[2][2]*x2
-         +param_densidad[2][3]*sigma_stack[t][s] +param_densidad[2][4]*pow(sigma_stack[t][s],2))
-        *pow(B,1./param_densidad[0][4]);}
-}
 
 
 
@@ -153,10 +141,12 @@ double x,x2;
 
 
 
-#include "../l/cosmo7_MG.h"//	corre camb hasta z=100, integra con MG hasta z=0, calcula sigma y dlns/dlnR
+
+
+#include "../l/cosmo8_MG.h"//	corre camb hasta z=100, integra con MG hasta z=0, calcula sigma y dlns/dlnR
 
 #include "../l/cosmo7_abundancia.h"//	subrutinas abundancia
-#include "../l/cosmo7_densidad.h"	//	subrutinas densidad
+#include "../l/cosmo8_densidad_bias.h"	//	subrutinas densidad
 
 
 
@@ -190,34 +180,43 @@ int no_tercio=1;
   char nomAr[410];
 
   LeePerfiles();
-  carga_espectro_99();	//	carga: espectro lcdm en 99 y 100
-  carga();		//	carga: parametros iniciales mcmc abundancia
+  calcula_correlation_fuction=1;	//calcula la funcion de correlacion cuando entre a main_rodrigo
+  carga();		//	carga: parametros iniciales mcmc bias+densidad
+  LeeBias();
+
 
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
     if(first_theory==0)param_cosmo[0]=log10(parametro[id_theory]);
     if(first_theory==3)param_cosmo[0]=parametro[id_theory];
-    si_densidad=1;
-    main_rodrigo(id_theory);	//	calcula P(k,z=0) y los sigma de perfiles, usa param_cosmo[0]
+    si_bias_densidad=1;
+    carga_espectro_99();	//	carga: espectro lcdm en 99 y 100
+    main_rodrigo(id_theory);	//	calcula P(k,z=0), los sigma de perfiles y la funcion de correlacion materia, usa param_cosmo[0]
   }
 
   //	empieza calculo del chi2
   double chi2=0.0;
   //	el numero de bines radiales con información ahora depende del valor de bin_stack
-  for(int id_theory=first_theory;id_theory<=last_theory;id_theory++)
+  for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
+    PerfilTeorico(id_theory);
     for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-      ParametrosPerfilDesc(id_theory,id_stack);
+      ParametrosPerfil(id_theory,id_stack);
       for(i=0;i<bines_radio_densidad[id_stack];i++)
         chi2+=pow((perfil(radio_densidad[i])-densidad[id_theory][id_stack][i])
                /error_densidad[id_theory][id_stack][i],2.0);
     }
+    coeficientes(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+      chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }
+  }
   lateral_chi[0]=chi2;
   co=chi2;
   cn=chi2;
 printf("chi2=%le\n",chi2);
 
-  for(int aux_param=0;aux_param<Npd;aux_param++){
-  for(int aux_coeff=0;aux_coeff<Ncd;aux_coeff++){
-    param_old[aux_param][aux_coeff]=param_densidad[aux_param][aux_coeff];}}
+  for(int aux_param=0;aux_param<Npbd;aux_param++){
+    param_old[aux_param]=param_densidad[aux_param];}
 
 
 
@@ -228,7 +227,7 @@ printf("chi2=%le\n",chi2);
 
 
 
-  sprintf(nomAr,"lista_todo_libre_%d_%d.txt",first_theory,last_theory);
+  sprintf(nomAr,"lista_bias_densidad_%d_%d.txt",first_theory,last_theory);
   if(segunda_vez==1)	NOM=fopen(nomAr,"a+");
   else			NOM=fopen(nomAr,"w+");
 
@@ -239,7 +238,6 @@ n_avanza=1;
 double delta,delta_min;
 int lineal;
 int id_param;
-int id_coeff;
 
 while(n_avanza>0){
   n_avanza=0;
@@ -247,14 +245,12 @@ while(n_avanza>0){
 int primer_lineal_global=1;
 int lineal_individual=0;
 int lin_param=0;
-int lin_coeff=0;
 int hizo_almenos_uno=0;
 
 
   for(lineal=0;lineal<ciclo_lineal;lineal++){
 
-  for(id_param=0;id_param<Npd;id_param++){
-  for(id_coeff=0;id_coeff<Ncd;id_coeff++){
+  for(id_param=0;id_param<Npbd;id_param++){
 
 
 
@@ -263,38 +259,43 @@ int hizo_almenos_uno=0;
   //////////////////////////////////////////////////////////////////////////
   /////////////////////////////	ciclo lineal	////////////////////////////////
   //////////////////////////////////////////////////////////////////////////
-  if((lineal==ciclo_lineal-1)&&(id_param==Npd-1)&&(id_coeff==Ncd-1)){
+  if((lineal==ciclo_lineal-1)&&(id_param==Npd-1)){
 
   //	calcula delta lineal
   if(primer_lineal_global==1){		// defino delta lineal
-    fprintf(NOM,"%le ",param_densidad[id_param][id_coeff]);
+    fprintf(NOM,"%le ",param_bd[id_param]);
     primer_lineal_global=0;
-    for(int aux_param=0;aux_param<Npd;aux_param++)
-      for(int aux_coeff=0;aux_coeff<Ncd;aux_coeff++){
-        delta_param_densidad[aux_param][aux_coeff]=0.1*(param_densidad[aux_param][aux_coeff]-param_old[aux_param][aux_coeff]);
-        if(delta_param_densidad[aux_param][aux_coeff]==0.)
-          delta_param_densidad[aux_param][aux_coeff]=param_densidad[aux_param][aux_coeff]*0.0001;
+    for(int aux_param=0;aux_param<Npbd;aux_param++){
+        delta_param_bd[aux_param]=0.1*(param_bd[aux_param]-param_old[aux_param]);
+        if(delta_param_bd[aux_param]==0.)
+          delta_param_bd[aux_param]=param_bd[aux_param]*0.0001;
 //        printf("%le %le\n",param_densidad[aux_param][aux_coeff],delta_param_densidad[aux_param][aux_coeff]);
 }}
 
   //	doy un paso lineal
   if(lineal_individual==1)	//	da un paso lineal individual
-    param_densidad[lin_param][lin_coeff]+=delta_param_densidad[lin_param][lin_coeff];
+    param_bd[lin_param]+=delta_param_bd[lin_param];
   else				//	da un paso lineal global
-    for(int aux_param=0;aux_param<Npd;aux_param++)
-      for(int aux_coeff=0;aux_coeff<Ncd;aux_coeff++)
-        param_densidad[aux_param][aux_coeff]+=delta_param_densidad[aux_param][aux_coeff];
+    for(int aux_param=0;aux_param<Npbd;aux_param++)
+        param_bd[aux_param]+=delta_param_bd[aux_param];
 
   //	empieza calculo del chi2
   double chi2=0.0;
   //	el numero de bines radiales con información ahora depende del valor de bin_stack
-  for(int id_theory=first_theory;id_theory<=last_theory;id_theory++)
+  for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
+    PerfilTeorico(id_theory);
     for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-      ParametrosPerfilDesc(id_theory,id_stack);
+      ParametrosPerfil(id_theory,id_stack);
       for(i=0;i<bines_radio_densidad[id_stack];i++)
         chi2+=pow((perfil(radio_densidad[i])-densidad[id_theory][id_stack][i])
                /error_densidad[id_theory][id_stack][i],2.0);
     }
+    coeficientes(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+      chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }
+  }
   co = cn;
   cn = chi2;
 
@@ -302,7 +303,7 @@ int hizo_almenos_uno=0;
 
 
     if(lineal_individual==1){		//	lineal individual
-      id_coeff=Ncd-2;	//	no salgo del ciclo lineal
+      id_param=Npbd-2;	//	no salgo del ciclo lineal
       if(cn<co){
         n_avanza++;
         hizo_almenos_uno++;		//	me aseguro hacer otro ciclo lineal individual
@@ -312,25 +313,21 @@ int hizo_almenos_uno=0;
 //printf(",");fflush(stdout);
 	//	retrocede
         cn=co;
-        param_densidad[lin_param][lin_coeff]-=delta_param_densidad[lin_param][lin_coeff];
-        lin_coeff++;
-        if(lin_coeff>=Ncd){
-          lin_coeff=0;
-          lin_param++;}
-        if(lin_param>=Npd)
+        param_bd[lin_param]-=delta_param_bd[lin_param];
+        lin_param++;
+        if(lin_param>=Npbd)
           lin_param=0;
 
-        if((lin_param==0)&&(lin_coeff==0)){	//	cliclo de intentos individuales completo
+        if(id_param==0){	//	cliclo de intentos individuales completo
           if(hizo_almenos_uno>0){	//	intento otro global
             printf("%d ",hizo_almenos_uno);fflush(stdout);
             lineal_individual=0;
            }
           else{		//	sale
-            id_coeff=Ncd;			//	salgo de los ciclos lineales
+            id_param=Npbd;			//	salgo de los ciclos lineales
             primer_lineal_global=1;
             lineal_individual=0;	//	reset
             lin_param=0;		//	reset
-            lin_coeff=0;		//	reset
             hizo_almenos_uno=0;		//	reset
             //	si en todo el ciclo anterior no azanzó nada
  /*           int todos=0;
@@ -346,7 +343,7 @@ int hizo_almenos_uno=0;
       }
     }
     else{			//	lineal global
-      id_coeff=Ncd-2;	//	no salgo del ciclo lineal
+      id_param=Npbd-2;	//	no salgo del ciclo lineal
       if(cn<co){
         n_avanza++;
         printf("G");fflush(stdout);}		//	continuo, no cambio nada
@@ -355,13 +352,11 @@ int hizo_almenos_uno=0;
   //      printf(" %le %le ",co,cn);fflush(stdout);
 	//	retrocede
         cn=co;
-        for(int aux_param=0;aux_param<Npd;aux_param++)
-          for(int aux_coeff=0;aux_coeff<Ncd;aux_coeff++)
-            param_densidad[aux_param][aux_coeff]-=delta_param_densidad[aux_param][aux_coeff];
+        for(int aux_param=0;aux_param<Npbd;aux_param++)
+            param_bd[aux_param]-=delta_param_bd[aux_param];
         lineal_individual=1;
         hizo_almenos_uno=0;
         lin_param=0;
-        lin_coeff=0;
       }
     }
 
@@ -371,29 +366,36 @@ int hizo_almenos_uno=0;
   ////////////////////////////	ciclo normal(lateral)
   //////////////////////////////////////////////////////////////////////////
   else{
-  lateral_param_densidad[0]=param_densidad[id_param][id_coeff];
+  lateral_param_densidad[0]=param_bd[id_param];
   lateral_chi[0]=cn;
-  delta=sigma_param_densidad[id_param][id_coeff]*0.02;
+  delta=sigma_param_bd[id_param]*0.02;
   delta_min=0.0001*delta;
-  lateral_param_densidad[1]=lateral_param_densidad[0]-delta;
-  lateral_param_densidad[2]=lateral_param_densidad[0]+delta;
+  lateral_param_bd[1]=lateral_param_bd[0]-delta;
+  lateral_param_bd[2]=lateral_param_bd[0]+delta;
 
   while(delta>delta_min){// numero de puntos a calcular en el espacio de fase
 
   for(int vecino=1;vecino<=2;vecino++){
-  param_densidad[id_param][id_coeff]=lateral_param_densidad[vecino];
+  param_bd[id_param]=lateral_param_bd[vecino];
 
 
   //	empieza calculo del chi2
   double chi2=0.0;
   //	el numero de bines radiales con información ahora depende del valor de bin_stack
-  for(int id_theory=first_theory;id_theory<=last_theory;id_theory++)
+  for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
+    PerfilTeorico(id_theory);
     for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-      ParametrosPerfilDesc(id_theory,id_stack);
+      ParametrosPerfil(id_theory,id_stack);
       for(i=0;i<bines_radio_densidad[id_stack];i++)
         chi2+=pow((perfil(radio_densidad[i])-densidad[id_theory][id_stack][i])
                /error_densidad[id_theory][id_stack][i],2.0);
     }
+    coeficientes(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+      chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }
+  }
   lateral_chi[vecino]=chi2;
 
 
@@ -405,7 +407,7 @@ int aux_avanza=0;
 for(int vecino=1;vecino<=2;vecino++)
   if(lateral_chi[0]>lateral_chi[vecino]){
     lateral_chi[0]=lateral_chi[vecino];
-    lateral_param_densidad[0]=lateral_param_densidad[vecino];
+    lateral_param_bd[0]=lateral_param_bd[vecino];
     aux_avanza++;
   }
 if(aux_avanza==0)
@@ -413,17 +415,17 @@ if(aux_avanza==0)
 else
   n_avanza++;
 
-  lateral_param_densidad[1]=lateral_param_densidad[0]-delta;
-  lateral_param_densidad[2]=lateral_param_densidad[0]+delta;
+  lateral_param_bd[1]=lateral_param_bd[0]-delta;
+  lateral_param_bd[2]=lateral_param_bd[0]+delta;
 }  //	while delta
 
-  param_densidad[id_param][id_coeff]=lateral_param_densidad[0];
+  param_bd[id_param]=lateral_param_bd[0];
   cn=lateral_chi[0];
 
-  if((id_param==0)&&(id_coeff==0)){
+  if(id_param==0){
     fflush(NOM);
     fprintf(NOM,"\n%d %le ",n_avanza,lateral_chi[0]);}
-  fprintf(NOM,"%le ",param_densidad[id_param][id_coeff]);
+  fprintf(NOM,"%le ",param_bd[id_param]);
 
 
 }  //	else:ciclo normal (lateral)
@@ -433,22 +435,20 @@ else
   //////////////////////////////////////////////////////////////////////////
   /////////////////////////////	a la mitad del ciclo lineal defino param_old
   //////////////////////////////////////////////////////////////////////////
-  if((lineal==tercio_ciclo_lineal-1)&&(id_param==Npd-1)&&(id_coeff==Ncd-1)){
+  if((lineal==tercio_ciclo_lineal-1)&&(id_param==Npbd-1)){
   if(no_tercio==0){
     printf("\ntercio lineal\n");fflush(stdout);
-  for(int aux_param=0;aux_param<Npd;aux_param++){
-  for(int aux_coeff=0;aux_coeff<Ncd;aux_coeff++){
-    param_old[aux_param][aux_coeff]=param_densidad[aux_param][aux_coeff];
+  for(int aux_param=0;aux_param<Npbd;aux_param++){
+    param_old[aux_param]=param_bd[aux_param];
 #if sigma_propto_param > 0
-    sigma_param_densidad[aux_param][aux_coeff]=0.1*abs(param_densidad[aux_param][aux_coeff]);
+    sigma_param_bd[aux_param]=0.1*abs(param_bd[aux_param]);
 #endif
-}}}
+}}
   else
   no_tercio=0;}
 
 
 
-}  //	for id_coeff
 
 }  //	for id_param
 
@@ -457,7 +457,7 @@ global+=n_avanza;
 }  //	while hace algun paso
 
 
-printf("n_avanza=%d lineal=%d id_param=%d id_coeff=%d\n",n_avanza,lineal,id_param,id_coeff);
+printf("n_avanza=%d lineal=%d id_param=%d\n",n_avanza,lineal,id_param);
 printf("delta=%le delta_min=%le\n",delta,delta_min);
 
 fprintf(NOM,"\n");

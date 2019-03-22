@@ -4,6 +4,10 @@
 //const double H0=71.9;
 
 
+  const int first_theory=0;
+  const int  last_theory=6;
+
+
 //	from planck_2018.ini
 double ombh2          = 0.0223828;
 double omch2          = 0.1201075;
@@ -45,7 +49,7 @@ double Rmin=radio_min_todos*1.01, Rmax=radio_max_todos*0.99;
 
 
 
-int correlation_fuction;
+
 
 //cruzado
 //char NameTheories[]={'D','B','A','l','6','5','4'};
@@ -68,9 +72,9 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   double pMax[Np], pMin[Np], ChiOld, ChiNew;		//	variables auxiliares
   double cn, co;
 
+  int si_bias;
   int si_densidad;
   int si_abundancia;
-  int si_bias;
   int si_imprime_mejor_ajuste_abundancia=0;
 
 
@@ -124,31 +128,31 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   //	densidad
   #define uniformiza_densidad 1
   #define densidad_integrada 0
-  #define Npd 3	//	densidad: parametros geometricos, c,a,b,G(r.2;sigma) (más la constante del G(sigma))
-  #define Ncd 5		//	densidad: coeficientes, potencias, cortes, constantes
 
-  double alpha,beta,A,B;
+  double A,B;
 
   //	bines stack a analizar
   const int   bin_stack=10;
-  const int first_stack=1;
-  const int  last_stack=7;
+  const int first_stack=2;
+  const int  last_stack=8;
 
   //	bines radiales para el perfil de densidad
   const int   bin_radio_densidad=200;			//	maximo número de bines
   const int bines_radio_densidad[bin_stack]={200,200,200,200,150,150,150,150,100,100};
-
-  //	coeficientes que bienen de mcmc_todo_libre5nuevofast_2.c
-  double param_densidad[Npd][Ncd];
+  double radio_densidad[bin_radio_densidad];	//	va entre 0 y 5,7.5,10,		es la distancia al centro del void normalizada por el radio del void
 
   //	medida perfiles
-  double radio_densidad[bin_radio_densidad];	//	va entre 0 y 5,7.5,10
-  double       densidad[theories][bin_stack][bin_radio_densidad];
-  double error_densidad[theories][bin_stack][bin_radio_densidad];
+  double       densidad[theories][bin_stack][bin_radio_densidad];	//	medida	
+  double error_densidad[theories][bin_stack][bin_radio_densidad];	//	medida
 
   double radio_stack[theories][bin_stack];	//	es el radio del void
-  double sigma_stack[theories][bin_stack];
   double dc=0.867554;
+  double xi[theories][124];		//	funcion de correlacion, todas las teorias
+  VecDoub radio_xi(124),xi_actual(124);	//	funcion de correlacion actual para interpolar
+
+  int imprime_correlation_fuction;
+  int calcula_correlation_fuction;
+
 
 
 
@@ -157,17 +161,23 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
 
 
   //	bias
-  #define Npbb 6		//	bias: coeficientes, potencias, cortes, constantes
-  double b1,b2,b3;
-  const int       bin_bias=10;
-  const int first_bin_bias=2;
-  const int  last_bin_bias=8;
+  double b0,b1,b2;
+  double  sigma_bias[theories][bin_stack];	//	rodrigo
+  double  radio_bias[theories][bin_stack];	//	medida
+  double medida_bias[theories][bin_stack];	//	medida
+  double  error_bias[theories][bin_stack];	//	medida
 
-  double  sigma_bias[theories][bin_bias];	//	rodrigo
-  double  radio_bias[theories][bin_bias];	//	medida
-  double medida_bias[theories][bin_bias];	//	medida
-  double  error_bias[theories][bin_bias];	//	medida
 
-  double param_bias[Npbb];
+  #define Npd 7	//	densidad: parametros geometricos, c,a,b,G; d1,d2,l1,l2		Number of Parameters for Density
+  #define Npbb 3		//	bias: coeficientes, potencias, cortes, constantes
+  #define Npbd 10	//	juntando los dos anteriores
+  //	parametros libres del modelo conjunto bias perfil
+  double param_bd[Npbd];
+
+
+
+
+
+
 
 

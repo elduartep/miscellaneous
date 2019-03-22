@@ -25,7 +25,8 @@
 #include "../l/cosmo7_MG.h"//	corre camb hasta z=100, integra con MG hasta z=0, calcula sigma y dlns/dlnR
 
 #include "../l/cosmo7_abundancia.h"//	subrutinas abundancia
-#include "../l/cosmo7_densidad.h"	//	subrutinas densidad
+#include "../l/cosmo7_densidad.h"//	subrutinas densidad
+#include "../l/cosmo7_bias.h"	//	subrutinas bias
 
 
 
@@ -55,6 +56,12 @@ void Chi(int id_theory){
     for(i=first_bin_abundancia;i<=last_bin_abundancia;i++)
       chi2+=pow((teoria_abundancia[id_theory][i]-abundancia[id_theory][i])/error_abundancia[id_theory][i],2.0);
     }
+  if(si_bias==1){
+    ParametrosBias(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+      chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }}
 }
 
 
@@ -84,10 +91,11 @@ void Chi(int id_theory){
 //Programa principal
 
 int main(int argc,char **argv){
-  if (argc != 3) {
+  if (argc != 4) {
     printf("Wrong number of arguments.\n");
     printf("si_densidad (0 o 1)\n");
     printf("si_abundancia (0 o 1)\n");
+    printf("si_bias (0 o 1)\n");
   exit(0);
   }
 
@@ -98,6 +106,10 @@ int main(int argc,char **argv){
   }
   if (sscanf(argv[2],"%d",&si_abundancia) == 0) {
     printf("1 si quiere usar datos de abundancia, 0 si no\n");
+    exit(0);
+  }
+  if (sscanf(argv[3],"%d",&si_bias) == 0) {
+    printf("1 si quiere usar datos de bias, 0 si no\n");
     exit(0);
   }
 
@@ -117,6 +129,9 @@ int main(int argc,char **argv){
   CargaAjustesAbundancia();
 
 
+  LeeBias();
+  CargaAjustesBias();
+
   int i,l;
 
   FILE * NOM;
@@ -124,22 +139,38 @@ int main(int argc,char **argv){
   char nomAr[210];
 
 
-  sprintf(nomAr,"lista_%d_%d_%d_%d.txt",id_theory,MG,si_densidad,si_abundancia);
+  sprintf(nomAr,"lista2_%d_%d_%d_%d_%d.txt",id_theory,MG,si_densidad,si_abundancia,si_bias);
   NOM=fopen(nomAr,"w+");
 
 
   double sup,inf;
   if(MG==1){
-    if(id_theory==0){      inf=-4.5;   sup=-3.5;}
-    if(id_theory==1){      inf=-5.5;   sup=-4.5;}
+    if(id_theory==0){      inf=-4.2;   sup=-2.6;}
+    if(id_theory==1){      inf=-5.4;   sup=-4.2;}
     if(id_theory==2){      inf=-6.5;   sup=-5.5;}
-    if(id_theory==3){      inf=-10.;   sup=-6.;}
+    if(id_theory==3){      inf=-10.;   sup=-7.;}
+
+if((si_bias==1)&&(si_abundancia==0)&&(si_densidad==0)){
+    if(id_theory==0){      inf=-5.0;   sup=-2.5;}
+    if(id_theory==1){      inf=-6.5;   sup=-3.5;}
+    if(id_theory==2){      inf=-10.0;   sup=-4.5;}
+    if(id_theory==3){      inf=-10.;   sup=-5.;}
+}
+
   }
   else{
     if(id_theory==3){      inf=1.e-5;  sup=0.5;}
-    if(id_theory==4){      inf=0.5;  sup=1.5;}
-    if(id_theory==5){      inf=1.5;  sup=2.5;}
-    if(id_theory==6){      inf=2.5;  sup=3.5;}
+    if(id_theory==4){      inf=0.5;    sup=1.5;}
+    if(id_theory==5){      inf=1.4;    sup=2.5;}
+    if(id_theory==6){      inf=1.2;    sup=3.2;}
+
+if((si_bias==1)&&(si_abundancia==0)&&(si_densidad==0)){
+    if(id_theory==3){      inf=1.e-5;  sup=1.5;}
+    if(id_theory==4){      inf=0.0;    sup=2.5;}
+    if(id_theory==5){      inf=1.0;    sup=3.5;}
+    if(id_theory==6){      inf=2.0;    sup=5.0;}
+}
+
   }
 
   for(param_cosmo[0]=inf;param_cosmo[0]<=sup;param_cosmo[0]+=(sup-inf)/double(NP)){

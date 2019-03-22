@@ -176,13 +176,7 @@ else
   rewind(NOM);
 
 //	ahora si estimamos la integral de la distribucion
-if((MG==1)&&(first_theory==3))
-  for(i=0;i<NP;i++){
-    fscanf(NOM,"%le %le\n",&chi2[i],&param_cos[i]);
-    if(i==0)	integral[i]=exp(-0.5*(chi2[i]-chi2min))*pow(10.,param_cos[i]);
-    else 	integral[i]=integral[i-1]+exp(-0.5*(chi2[i]-chi2min))*(pow(10.,param_cos[i])-pow(10.,param_cos[i-1]));
-  }
-else
+
   for(i=0;i<NP;i++){
     fscanf(NOM,"%le %le\n",&chi2[i],&param_cos[i]);
     if(i==0)	integral[i]=exp(-0.5*(chi2[i]-chi2min));
@@ -197,15 +191,11 @@ printf("chimin=%lf param=%le id=%d ",chi2min/dof[obs],param_cos[min],min);
   int med=0;
   while(integral[med]<0.5*integral[NP-1])
     med++;
-  if((MG==1)&&(first_theory==3)){
-    printf("%c%c %le %le ",NameTheory[MG-1],NameTheories[first_theory],
-      pow(10.,param_cos[min]),pow(10,param_cos[med]));
-    fprintf(TEX,"%.2lf & %.2lf ",ar(pow(10.,param_cos[min]+8.)),ar(pow(10,param_cos[med]+8.)));}
-  else{
+
     printf("%c%c %le %le ",NameTheory[MG-1],NameTheories[first_theory],param_cos[min],param_cos[med]);
     fflush(stdout);
     fprintf(TEX,"%.2lf & %.2lf ",ar(param_cos[min]),ar(param_cos[med]));
-    fflush(stdout);}
+    fflush(stdout);
 
 
 for(j=0;j<3;j++){
@@ -216,15 +206,11 @@ for(j=0;j<3;j++){
     while(integral[der]>porcentage[j]*integral[NP-1]){
       der--;
     }
-  if(MG==1){
-    printf("%le ",pow(10.,param_cos[der]));
-    fprintf(TEX,"& <%.2lf ",ar(pow(10.,param_cos[der]+8.)));
-}
-  else{
+
     printf("%le ",param_cos[der]);
     fprintf(TEX,"& <%.2lf ",ar(param_cos[der]));}
 
-  }
+
   else{
     while(fraccion>porcentage[j]*integral[NP-1]){
       while(chi2[der]>chi2[izq])

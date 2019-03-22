@@ -1,3 +1,20 @@
+//	bias = a + b s_2 + c s_4
+
+//	dejando a constante, y aplicando una relacion lineal entre b y c
+
+//	symmetron
+//	c=-0.1705 + 6.333e-4 z + ..zz
+//	varia tan poco que voy a considerarlo constante
+
+
+//	f(R)
+//	c=-0.15895 + 1.75e-4 log10(3e-10 + fR0)
+//	tambien varia poco
+
+//	esto lleva a un total de 1 + 2 + 3 parametros:::::: viable?
+
+
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -10,16 +27,16 @@
 #include "../l/cosmo7_parametros.h"
 
   using namespace std;
-  #define seed 2176
+
   #define sigma_propto_param 1
 
 
   const int segunda_vez=0;
 
-  const int without_id_theory=40;
+  char NameCase[]={'f','s'};
 
-  const int first_theory=3;
-  const int  last_theory=6;
+  const int first_theory=0;
+  const int  last_theory=3;
 
 
 
@@ -37,51 +54,53 @@
 
 
 
-
-
-  double delta_param[Npca],param_old[Npca];	//	para evolucion lineal
-  double sigma_param_abundancia[Npca];
-
+  double delta_param[Npbb],param_old[Npbb];	//	para evolucion lineal
+  double sigma_param_bias[Npbb];
 
 
 void carga(void){
-if(first_theory==0){
-  param_abundancia[0]=1.13e-00;	sigma_param_abundancia[0]=1.e-01;	//	alpha:0
-  param_abundancia[1]=1.25e-01; sigma_param_abundancia[1]=1.e-02;	//	alpha:1
-  param_abundancia[2]=3.00e-08;	sigma_param_abundancia[2]=1.e-09;	//	alpha:log
-  param_abundancia[3]=2.01e-01;	sigma_param_abundancia[3]=1.e-02;	//	A
-  param_abundancia[4]=3.17e-00;	sigma_param_abundancia[4]=1.e-01;	//	beta
-  param_abundancia[5]=1.13e-00;	sigma_param_abundancia[5]=1.e-01;	//	c: factor dentro de la exponencial
-}
-else if(first_theory==3){
-  param_abundancia[0]=3.0e-01;	sigma_param_abundancia[0]=1.e-02;	//	alpha:0
-  param_abundancia[1]=1.9e-01;	sigma_param_abundancia[1]=1.e-02;	//	alpha:1
-  param_abundancia[2]=2.0e-00;	sigma_param_abundancia[2]=1.e-01;	//	alpha:exp
-  param_abundancia[3]=2.21e-01;	sigma_param_abundancia[3]=1.e-02;	//	A
-  param_abundancia[4]=3.07e-00;	sigma_param_abundancia[4]=1.e-01;	//	beta
-  param_abundancia[5]=1.17e-00;	sigma_param_abundancia[5]=1.e-01;	//	c: factor dentro de la exponencial
-}
+
+//	f(R)
+//	c=-0.15895 + 1.75e-4 log10(3e-10 + fR0)
+  if(first_theory==0){
+    param_bias[0]=-0.159;	// c
+    param_bias[1]=1.772e-4;	// c
+    param_bias[2]=3.72e-10;	// c
+    param_bias[3]=7.15;		// b
+    param_bias[4]=47.14;	// b
+    param_bias[5]=0.611;	// a
+  }
+//	symmetron
+//	c=-0.1705 + 6.333e-4 z + ..zz
+  if(first_theory==3){
+    param_bias[0]=-0.1703;	// c
+    param_bias[1]=4.44e-4;	// c
+    param_bias[2]=6.4e-5;	// c
+    param_bias[3]=7.6;		// b
+    param_bias[4]=47.06;	// b
+    param_bias[5]=0.6178;	// a
+  }
 
 
 if(segunda_vez==1){
   FILE * NOM;
-  char nomAr[210];int n_salta;
-  sprintf(nomAr,"list_abundancia_%d_%d.txt",first_theory,last_theory);
+  char nomAr[410];int n_salta;
+  sprintf(nomAr,"lista_bias_%d_%d.txt",first_theory,last_theory);
   NOM=fopen(nomAr,"r");
-  while(fscanf(NOM,"%d %le %le %le %le %le %le %le\n"
-   ,&n_salta,&co,&param_abundancia[0],&param_abundancia[1],
-&param_abundancia[2],&param_abundancia[3],&param_abundancia[4],&param_abundancia[5])!=EOF);
+  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le %le\n"
+,&n_salta,&co,&param_bias[0],&param_bias[1],&param_bias[2],&param_bias[3],&param_bias[4]
+,&param_bias[5],&param_bias[6],&param_bias[7],&param_bias[8])!=EOF);
   fclose(NOM);
+  lateral_chi[0]=co;
 }
 printf("co=%le\n",co);
 
 
+
 #if sigma_propto_param > 0
-  for(int aux_param=0;aux_param<Npca;aux_param++){
-    sigma_param_abundancia[aux_param]=0.1*abs(param_abundancia[aux_param]);}
+  for(int aux_param=0;aux_param<Npbb;aux_param++){
+    sigma_param_bias[aux_param]=0.1*abs(param_bias[aux_param]);}
 #endif
-
-
 }
 
 
@@ -91,17 +110,17 @@ printf("co=%le\n",co);
 
 
 
-
-void coeficientes(int id_theory){
-double x;
+void coeficientes(int t){
+double x,x2;
   if(first_theory==0){
-    x=log10(parametro[id_theory]+param_abundancia[2]);
-    gama=param_abundancia[0]+param_abundancia[1]*x;}
+    x=log10(parametro[t]+param_bias[2]);
+    b3=param_bias[0]+param_bias[1]*x;}
   else if(first_theory==3){
-    x=parametro[id_theory];
-    gama=param_abundancia[0]+param_abundancia[1]*x/(1.+param_abundancia[2]*exp(-x*x));}
+    x=parametro[t];
+    b3=param_bias[0]+param_bias[1]*x+param_bias[2]*x*x;}
+  b2=param_bias[3]+param_bias[4]*b3;
+  b1=param_bias[5];
 }
-
 
 
 
@@ -111,7 +130,13 @@ double x;
 
 #include "../l/cosmo7_MG.h"//	corre camb hasta z=100, integra con MG hasta z=0, calcula sigma y dlns/dlnR
 
-#include "../l/cosmo7_abundancia.h"//	subrutinas abundancia
+#include "../l/cosmo7_bias.h"//	subrutinas abundancia
+
+
+
+
+
+
 
 
 
@@ -136,38 +161,34 @@ int no_tercio=1;
   FILE * NOM;
   FILE * SOM;
   FILE * OML;
-  char nomAr[310];
+  char nomAr[410];
 
-  LeeAbundancia();	//	carga: abundancia,error_,radio_
+  LeeBias();
   carga_espectro_99();	//	carga: espectro lcdm en 99 y 100
   carga();		//	carga: parametros iniciales mcmc abundancia
 
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
     if(first_theory==0)param_cosmo[0]=log10(parametro[id_theory]);
     if(first_theory==3)param_cosmo[0]=parametro[id_theory];
+    si_bias=1;
     main_rodrigo(id_theory);	//	calcula P(k,z=0) y los sigma de perfiles, usa param_cosmo[0]
-    calcula_sigma_derivadas(id_theory);
   }
-
 
   //	empieza calculo del chi2
   double chi2=0.0;
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
-    if(id_theory!=without_id_theory){
-      coeficientes(id_theory);
-      calcula_abundancia_teorica(id_theory);	//	calcula la abundancia teorica, necesita gama
-      for(i=first_bin_abundancia;i<=last_bin_abundancia;i++)
-      chi2+=pow((teoria_abundancia[id_theory][i]-abundancia[id_theory][i])
-                 /error_abundancia[id_theory][i],2.0);
-    }
-  }
+    coeficientes(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+      chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }}
   lateral_chi[0]=chi2;
   co=chi2;
   cn=chi2;
 printf("chi2=%le\n",chi2);
 
-  for(int aux_param=0;aux_param<Npca;aux_param++){
-    param_old[aux_param]=param_abundancia[aux_param];}
+  for(int aux_param=0;aux_param<Npbb;aux_param++){
+    param_old[aux_param]=param_bias[aux_param];}
 
 
 
@@ -178,7 +199,7 @@ printf("chi2=%le\n",chi2);
 
 
 
-  sprintf(nomAr,"list_abundancia_%d_%d.txt",first_theory,last_theory);
+  sprintf(nomAr,"lista_bias_%d_%d.txt",first_theory,last_theory);
   if(segunda_vez==1)	NOM=fopen(nomAr,"a+");
   else			NOM=fopen(nomAr,"w+");
 
@@ -201,7 +222,7 @@ int hizo_almenos_uno=0;
 
   for(lineal=0;lineal<ciclo_lineal;lineal++){
 
-  for(id_param=0;id_param<Npca;id_param++){
+  for(id_param=0;id_param<Npbb;id_param++){
 
 
 
@@ -210,34 +231,35 @@ int hizo_almenos_uno=0;
   //////////////////////////////////////////////////////////////////////////
   /////////////////////////////	ciclo lineal	////////////////////////////////
   //////////////////////////////////////////////////////////////////////////
-  if((lineal==ciclo_lineal-1)&&(id_param==Npca-1)){
+  if((lineal==ciclo_lineal-1)&&(id_param==Npbb-1)){
 
   //	calcula delta lineal
   if(primer_lineal_global==1){		// defino delta lineal
-    fprintf(NOM,"%le ",param_abundancia[id_param]);
+    fprintf(NOM,"%le ",param_bias[id_param]);
     primer_lineal_global=0;
-    for(int aux_param=0;aux_param<Npca;aux_param++){
-        delta_param[aux_param]=0.1*(param_abundancia[aux_param]-param_old[aux_param]);
-  //      printf("%le %le\n",param_abundancia[aux_param],delta_param[aux_param]);
+    for(int aux_param=0;aux_param<Npbb;aux_param++){
+        delta_param[aux_param]=0.1*(param_bias[aux_param]-param_old[aux_param]);
+        if(delta_param[aux_param]==0.)
+          delta_param[aux_param]=param_bias[aux_param]*0.0001;
+//        printf("%le %le\n",param_bias[aux_param],delta_param_bias[aux_param]);
 }}
 
   //	doy un paso lineal
   if(lineal_individual==1)	//	da un paso lineal individual
-    param_abundancia[lin_param]+=delta_param[lin_param];
+    param_bias[lin_param]+=delta_param[lin_param];
   else				//	da un paso lineal global
-    for(int aux_param=0;aux_param<Npca;aux_param++)
-        param_abundancia[aux_param]+=delta_param[aux_param];
+    for(int aux_param=0;aux_param<Npbb;aux_param++)
+        param_bias[aux_param]+=delta_param[aux_param];
 
-  chi2=0.0;  
+  //	empieza calculo del chi2
+  chi2=0.0;
+  //	el numero de bines radiales con información ahora depende del valor de bin_stack
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
-    if(id_theory!=without_id_theory){
-      coeficientes(id_theory);
-      calcula_abundancia_teorica(id_theory);	//	calcula la abundancia teorica, necesita gama
-      for(i=first_bin_abundancia;i<=last_bin_abundancia;i++)
-      chi2+=pow((teoria_abundancia[id_theory][i]-abundancia[id_theory][i])
-                 /error_abundancia[id_theory][i],2.0);
-    }
-  }
+    coeficientes(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+        chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }}
   co = cn;
   cn = chi2;
 
@@ -245,7 +267,7 @@ int hizo_almenos_uno=0;
 
 
     if(lineal_individual==1){		//	lineal individual
-      id_param=Npca-2;	//	no salgo del ciclo lineal
+      id_param=Npbb-2;	//	no salgo del ciclo lineal
       if(cn<co){
         n_avanza++;
         hizo_almenos_uno++;		//	me aseguro hacer otro ciclo lineal individual
@@ -255,10 +277,10 @@ int hizo_almenos_uno=0;
 //printf(",");fflush(stdout);
 	//	retrocede
         cn=co;
-        param_abundancia[lin_param]-=delta_param[lin_param];
+        param_bias[lin_param]-=delta_param[lin_param];
         lin_param++;
-        if(lin_param>=Npca)
-          lin_param-=Npca;
+        if(lin_param>=Npbb)
+          lin_param-=Npbb;
 
         if(lin_param==0){	//	cliclo de intentos individuales completo
           if(hizo_almenos_uno>0){	//	intento otro global
@@ -266,7 +288,7 @@ int hizo_almenos_uno=0;
             lineal_individual=0;
            }
           else{		//	sale
-            id_param=Npca;			//	salgo de los ciclos lineales
+            id_param=Npbb;			//	salgo de los ciclos lineales
             primer_lineal_global=1;
             lineal_individual=0;	//	reset
             lin_param=0;		//	reset
@@ -277,7 +299,7 @@ int hizo_almenos_uno=0;
       }
     }
     else{			//	lineal global
-      id_param=Npca-2;	//	no salgo del ciclo lineal
+      id_param=Npbb-2;	//	no salgo del ciclo lineal
       if(cn<co){
         n_avanza++;
         printf("G");fflush(stdout);}		//	continuo, no cambio nada
@@ -286,8 +308,8 @@ int hizo_almenos_uno=0;
   //      printf(" %le %le ",co,cn);fflush(stdout);
 	//	retrocede
         cn=co;
-        for(int aux_param=0;aux_param<Npca;aux_param++)
-            param_abundancia[aux_param]-=delta_param[aux_param];
+        for(int aux_param=0;aux_param<Npbb;aux_param++)
+            param_bias[aux_param]-=delta_param[aux_param];
         lineal_individual=1;
         hizo_almenos_uno=0;
         lin_param=0;
@@ -295,15 +317,14 @@ int hizo_almenos_uno=0;
     }
 
 
-
 }
   //////////////////////////////////////////////////////////////////////////
   ////////////////////////////	ciclo normal(lateral)
   //////////////////////////////////////////////////////////////////////////
   else{
-  lateral_param[0]=param_abundancia[id_param];
+  lateral_param[0]=param_bias[id_param];
   lateral_chi[0]=cn;
-  delta=sigma_param_abundancia[id_param]*0.02;
+  delta=sigma_param_bias[id_param]*0.02;
   delta_min=0.0001*delta;
   lateral_param[1]=lateral_param[0]-delta;
   lateral_param[2]=lateral_param[0]+delta;
@@ -311,18 +332,15 @@ int hizo_almenos_uno=0;
   while(delta>delta_min){// numero de puntos a calcular en el espacio de fase
 
   for(int vecino=1;vecino<=2;vecino++){
-  param_abundancia[id_param]=lateral_param[vecino];
+  param_bias[id_param]=lateral_param[vecino];
 
-  chi2=0.;
+  chi2=0.0;
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
-    if(id_theory!=without_id_theory){
-      coeficientes(id_theory);
-      calcula_abundancia_teorica(id_theory);	//	calcula la abundancia teorica, necesita gama
-      for(i=first_bin_abundancia;i<=last_bin_abundancia;i++)
-      chi2+=pow((teoria_abundancia[id_theory][i]-abundancia[id_theory][i])
-                 /error_abundancia[id_theory][i],2.0);
-    }
-  }
+    coeficientes(id_theory);
+    for(int id_bin=first_bin_bias;id_bin<=last_bin_bias;id_bin++){
+        chi2+=pow((bias(sigma_bias[id_theory][id_bin])-medida_bias[id_theory][id_bin])
+               /error_bias[id_theory][id_bin],2.0);
+    }}
   lateral_chi[vecino]=chi2;
 
 
@@ -344,17 +362,15 @@ else
 
   lateral_param[1]=lateral_param[0]-delta;
   lateral_param[2]=lateral_param[0]+delta;
-//printf("%d %d %d %le %le %le %le %le %le\n",id_param,id_coeff,n_avanza,lateral_chi[0],lateral_chi[1],lateral_chi[2], param[id_param][id_coeff],delta,delta_min);
 }  //	while delta
 
-  param_abundancia[id_param]=lateral_param[0];
+  param_bias[id_param]=lateral_param[0];
   cn=lateral_chi[0];
 
-  if((id_param==0)){
+  if(id_param==0){
     fflush(NOM);
     fprintf(NOM,"\n%d %le ",n_avanza,lateral_chi[0]);}
-  fprintf(NOM,"%le ",param_abundancia[id_param]);
-
+  fprintf(NOM,"%le ",param_bias[id_param]);
 
 
 }  //	else:ciclo normal (lateral)
@@ -364,14 +380,17 @@ else
   //////////////////////////////////////////////////////////////////////////
   /////////////////////////////	a la mitad del ciclo lineal defino param_old
   //////////////////////////////////////////////////////////////////////////
-  if((lineal==tercio_ciclo_lineal-1)&&(id_param==Npca-1)){
+  if((lineal==tercio_ciclo_lineal-1)&&(id_param==Npbb-1)){
   if(no_tercio==0){
     printf("\ntercio lineal\n");fflush(stdout);
-  for(int aux_param=0;aux_param<Npca;aux_param++){
-    param_old[aux_param]=param_abundancia[aux_param];}}
+  for(int aux_param=0;aux_param<Npbb;aux_param++){
+    param_old[aux_param]=param_bias[aux_param];
+#if sigma_propto_param > 0
+    sigma_param_bias[aux_param]=0.1*abs(param_bias[aux_param]);
+#endif
+}}
   else
   no_tercio=0;}
-
 
 
 
@@ -379,7 +398,6 @@ else
 
 }  //	for lineal
 global+=n_avanza;
-printf("na %d\n",n_avanza);fflush(stdout);
 }  //	while hace algun paso
 
 
@@ -390,14 +408,28 @@ fprintf(NOM,"\n");
 fclose(NOM);
 
 
-
-
-
+  //	imprime
+  FILE *PLO;
+  sprintf(nomAr,"bias_%d_%d.dat",first_theory,last_theory);
+  PLO=fopen(nomAr,"w+");
+  for(int t =first_theory;t<=last_theory;t++){
+    coeficientes(t);
+    fprintf(PLO,"c%c=%le\n",NameTheories[t],b3);
+    fprintf(PLO,"b%c=%le\n",NameTheories[t],b2);}
+  fprintf(PLO,"a=%le\n",b1);
+  fclose(PLO);
 
 
 
 
 //}
+
+
+
+
+
+
+
 
 
 

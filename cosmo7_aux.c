@@ -20,12 +20,14 @@
 
 #include "../l/cosmo7_abundancia.h"//	subrutinas abundancia
 #include "../l/cosmo7_densidad.h"	//	subrutinas densidad
+#include "../l/cosmo7_bias.h"	//	subrutinas bias
 
 
 int NP=1000;
 
 double chi2;
 double first_theory,last_theory;	
+char NameCase[]={'f','s'};
 
 
 
@@ -33,10 +35,11 @@ double first_theory,last_theory;
 //Programa principal
 
 int main(int argc,char **argv){
-  if (argc != 3) {
+  if (argc != 4) {
     printf("Wrong number of arguments.\n");
     printf("si_densidad (0 o 1)\n");
     printf("si_abundancia (0 o 1)\n");
+    printf("si_bias (0 o 1)\n");
   exit(0);
   }
 
@@ -49,9 +52,17 @@ int main(int argc,char **argv){
     printf("1 si quiere usar datos de abundancia, 0 si no\n");
     exit(0);
   }
+  if (sscanf(argv[3],"%d",&si_bias) == 0) {
+    printf("1 si quiere usar datos del bias lineal, 0 si no\n");
+    exit(0);
+  }
 
 
-
+  FILE *CHI;
+//	correcta
+  CHI=fopen("chi2.dat","w+");
+//	cruzada
+//  CHI=fopen("chi2.dat","w+");
 
   for(MG=1;MG<3;MG++){
 
@@ -82,7 +93,12 @@ int main(int argc,char **argv){
   LeeAbundancia();
   CargaAjustesAbundancia();
 
-  sprintf(nomAr,"lista_%d_%d_%d_%d.txt",id_theory,MG,si_densidad,si_abundancia);
+  LeeBias();
+  CargaAjustesBias();
+// modelos cruzados
+//  sprintf(nomAr,"lista2_%d_%d_%d_%d_%d.txt",id_theory,MG,si_densidad,si_abundancia,si_bias);
+// modelos correctos
+  sprintf(nomAr,"lista_%d_%d_%d_%d_%d.txt",id_theory,MG,si_densidad,si_abundancia,si_bias);
   NOM=fopen(nomAr,"r");
 
   double chi_min,param_min;
@@ -97,6 +113,11 @@ int main(int argc,char **argv){
       param_min=param_cosmo[0];
     }
   }
+
+// modelos cruzados
+//  fprintf(CHI,"chi2min2_%c_%c=%le\n",NameCase[MG-1],NameTheories[id_theory],chi_min);
+// modelos correctos
+  fprintf(CHI,"chi2min_%c_%c=%le\n",NameCase[MG-1],NameTheories[id_theory],chi_min);
 
   fclose(NOM);
 
@@ -121,8 +142,17 @@ int main(int argc,char **argv){
   fprintf(SA,"A=%le\n",param_abundancia[3]);
   fprintf(SA,"a%c=%le\n",NameTheories[id_theory],gama);
   fprintf(SA,"b=%le\n",param_abundancia[4]);
-  fprintf(SA,"c=%le\n",param_abundancia[5]);
-  fprintf(SA,"\n");
+  fprintf(SA,"c=%le\n\n",param_abundancia[5]);
+
+  imprime_mejor_ajuste_abundancia(id_theory,MG);
+
+
+  }
+  if(si_bias==1){
+  ParametrosBias(id_theory);
+  fprintf(SA,"b1=%le\n",b1);
+  fprintf(SA,"b2%c=%le\n",NameTheories[id_theory],b2);
+  fprintf(SA,"b3%c=%le\n",NameTheories[id_theory],b3);
   }
 
 
@@ -130,6 +160,8 @@ int main(int argc,char **argv){
 
 fclose(SA);
 }
+
+fclose(CHI);
 
 
 

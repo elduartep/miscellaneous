@@ -20,8 +20,8 @@ double x;
 //	A nu^alpha ( 1 + b nu^beta) exp( -c nu^gama )
 inline double FuncionRadio(double sigma){
 double nu=1.686/sigma;
-return param_abundancia[3]*pow(sigma,-gama)*(1.+si_segunda_potencia*pow(nu,param_abundancia[4]))
-        *exp(-param_abundancia[5]*pow(sigma,-4./(1.+si_segunda_potencia)));
+return param_abundancia[3]*pow(sigma,-gama)*(1.+pow(nu,param_abundancia[4]))
+        *exp(-param_abundancia[5]*pow(sigma,-2.));
 }
 
 
@@ -111,40 +111,6 @@ for(i=1;i<bin_abundancia;i++)
 }
 
 
-
-
-
-
-
-void imprime_mejor_ajuste_abundancia(int id_theory, int MG){
-  FILE * IM;
-  char Ar[200];
-  sprintf(Ar,"mejor_ajuste_abundancia_%c_%d.dat",NameTheories[id_theory],MG);
-  IM=fopen(Ar,"w+");
-
-  Int i;
-  //	calcula sigma y derivada para todos los radios en que tenemos abundancia
-  double w,dw,wm,dwm,sigma2;	int j;
-  double radio_aux=1.,dradio_aux=19./bin_print_abundance,sigma_aux,dsigma;	Int bin_imprime=100;
-  for(j=0;j<bin_print_abundance;j++){
-    sigma2 = 0.0;
-    dsigma = 0.0;
-    for(i=0;i<nk-1;i++){///	integral
-      W_dW(radio_aux*K[i],w,dw);
-      W_dW(radio_aux*K[i+1],wm,dwm);
-      sigma2 += (K[i+1]-K[i])*(P[i]*pow(K[i],2)*pow(w,2) + P[i+1]*pow(K[i+1],2)*pow(wm,2));
-      dsigma += (K[i+1]-K[i])*(P[i]*pow(K[i],3)*w*dw + P[i+1]*pow(K[i+1],3)*wm*dwm);
-    }
-    sigma_aux=sqrt(sigma2)/(2.0*pi);
-    dsigma/=(4.0*pi*pi);
-
-    //	ahora si calcula la abundancia
-    fprintf(IM,"%le %le \n",radio_aux,-3.*dsigma/(4.*pi*pow(sigma_aux*radio_aux,2))*FuncionRadio(sigma_aux));
-    radio_aux+=dradio_aux;
-  }
-  fclose(IM);
-
-}
 
 
 

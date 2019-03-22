@@ -7,19 +7,18 @@
 #include "../l/nr3.h"
 #include "../l/interp_1d.h"
 
-#include "../l/cosmo7_parametros.h"
+#include "../l/cosmo8_parametros.h"
 
   using namespace std;
   #define seed 2176
   #define sigma_propto_param 1
 
-
   const int segunda_vez=0;
 
   const int without_id_theory=40;
 
-  const int first_theory=3;
-  const int  last_theory=6;
+  const int first_theory=0;
+  const int  last_theory=3;
 
 
 
@@ -39,6 +38,7 @@
 
 
 
+  double chi_actual; 	//	variables basicas
   double delta_param[Npca],param_old[Npca];	//	para evolucion lineal
   double sigma_param_abundancia[Npca];
 
@@ -46,7 +46,7 @@
 
 void carga(void){
 if(first_theory==0){
-  param_abundancia[0]=1.13e-00;	sigma_param_abundancia[0]=1.e-01;	//	alpha:0
+  param_abundancia[0]=1.13e-01;	sigma_param_abundancia[0]=1.e-02;	//	alpha:0
   param_abundancia[1]=1.25e-01; sigma_param_abundancia[1]=1.e-02;	//	alpha:1
   param_abundancia[2]=3.00e-08;	sigma_param_abundancia[2]=1.e-09;	//	alpha:log
   param_abundancia[3]=2.01e-01;	sigma_param_abundancia[3]=1.e-02;	//	A
@@ -56,7 +56,7 @@ if(first_theory==0){
 else if(first_theory==3){
   param_abundancia[0]=3.0e-01;	sigma_param_abundancia[0]=1.e-02;	//	alpha:0
   param_abundancia[1]=1.9e-01;	sigma_param_abundancia[1]=1.e-02;	//	alpha:1
-  param_abundancia[2]=2.0e-00;	sigma_param_abundancia[2]=1.e-01;	//	alpha:exp
+  param_abundancia[2]=3.0e-00;	sigma_param_abundancia[2]=1.e-01;	//	alpha:exp
   param_abundancia[3]=2.21e-01;	sigma_param_abundancia[3]=1.e-02;	//	A
   param_abundancia[4]=3.07e-00;	sigma_param_abundancia[4]=1.e-01;	//	beta
   param_abundancia[5]=1.17e-00;	sigma_param_abundancia[5]=1.e-01;	//	c: factor dentro de la exponencial
@@ -95,7 +95,7 @@ printf("co=%le\n",co);
 void coeficientes(int id_theory){
 double x;
   if(first_theory==0){
-    x=log10(parametro[id_theory]+param_abundancia[2]);
+    x=log10(param_abundancia[2]+parametro[id_theory]);
     gama=param_abundancia[0]+param_abundancia[1]*x;}
   else if(first_theory==3){
     x=parametro[id_theory];
@@ -112,7 +112,7 @@ double x;
 #include "../l/cosmo7_MG.h"//	corre camb hasta z=100, integra con MG hasta z=0, calcula sigma y dlns/dlnR
 
 #include "../l/cosmo7_abundancia.h"//	subrutinas abundancia
-
+#include "../l/cosmo7_densidad.h"	//	subrutinas densidad
 
 
 
@@ -136,7 +136,7 @@ int no_tercio=1;
   FILE * NOM;
   FILE * SOM;
   FILE * OML;
-  char nomAr[310];
+  char nomAr[210];
 
   LeeAbundancia();	//	carga: abundancia,error_,radio_
   carga_espectro_99();	//	carga: espectro lcdm en 99 y 100
@@ -260,7 +260,7 @@ int hizo_almenos_uno=0;
         if(lin_param>=Npca)
           lin_param-=Npca;
 
-        if(lin_param==0){	//	cliclo de intentos individuales completo
+        if((lin_param==0)){	//	cliclo de intentos individuales completo
           if(hizo_almenos_uno>0){	//	intento otro global
             printf("%d ",hizo_almenos_uno);fflush(stdout);
             lineal_individual=0;
@@ -302,7 +302,7 @@ int hizo_almenos_uno=0;
   //////////////////////////////////////////////////////////////////////////
   else{
   lateral_param[0]=param_abundancia[id_param];
-  lateral_chi[0]=cn;
+  lateral_chi[0]=cn;/////////////////////////////////////////////////////
   delta=sigma_param_abundancia[id_param]*0.02;
   delta_min=0.0001*delta;
   lateral_param[1]=lateral_param[0]-delta;

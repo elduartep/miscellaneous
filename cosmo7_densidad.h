@@ -22,10 +22,8 @@ void CargaAjustesDensidad(void){
 
 void ParametrosPerfil(int t,int s){
 double x,x2;
-
   if(MG==1){
       x=log10(param_densidad[0][2]+pow(10.,param_cosmo[0]));
-     x2=x*x;
   alpha=param_densidad[0][0] +param_densidad[0][1]*x
         +param_densidad[0][3]*sigma_stack[t][s];
    beta=param_densidad[0][4]*alpha;
@@ -41,8 +39,8 @@ double x,x2;
    beta=param_densidad[0][4]*alpha;
       B=param_densidad[1][0]+param_densidad[1][1]*pow(sigma_stack[t][s],-param_densidad[1][2]);
       A=(param_densidad[2][0] +param_densidad[2][1]*x +param_densidad[2][2]*x2
-         +param_densidad[2][3]*sigma_stack[t][s] 
-         +param_densidad[2][4]*pow(sigma_stack[t][s],2)) *pow(B,1./param_densidad[0][4]);}
+         +param_densidad[2][3]*sigma_stack[t][s] +param_densidad[2][4]*pow(sigma_stack[t][s],2))
+        *pow(B,1./param_densidad[0][4]);}
 }
 
 

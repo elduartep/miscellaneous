@@ -349,38 +349,34 @@ for(j=0;j<nk;j++){
 }
 
   char nomAr[210];
-  FILE * MPS;
-  sprintf(nomAr,"../%c/P.txt",NameTheories[id_theory]);
-  MPS=fopen(nomAr,"w+");
+//  FILE * MPS;
+//  sprintf(nomAr,"../%c/P.txt",NameTheories[id_theory]);
+//  MPS=fopen(nomAr,"w+");
   for(i=0;i<nk;i++){
 	P[i] = d[i]*d[i]/1.0285;
-    fprintf(MPS,"%le %le\n",K[i],P[i]);
+//    fprintf(MPS,"%le %le\n",K[i],P[i]);
   }
-  fclose(MPS);
+//  fclose(MPS);
 
 
 
-//	calcula sigma, lo necesito para el perfil de densidad
-if(si_densidad==1){
+
+
+//	calcula sigma, lo necesito para el biasy para la densidad
+if((si_bias==1)||(si_densidad==1)){
   /*Evaluating the square root of variance (\sigma)*/
+
   for(int s=first_stack;s<=last_stack;s++){
-    double rad=radio_stack[id_theory][s];
-    sigma_stack[id_theory][s] = sqrt(calc_sigma(nk,rad));
-  }
-}
-
-
-//	calcula sigma, lo necesito para el bias
-if(si_bias==1){
-  /*Evaluating the square root of variance (\sigma)*/
-  for(int s=first_bin_bias;s<=last_bin_bias;s++){
     double rad=radio_bias[id_theory][s];
     sigma_bias[id_theory][s] = sqrt(calc_sigma(nk,rad));
+//printf("%le %le %le\n",radio_stack[id_theory][s],radio_bias[id_theory][s],sigma_bias[id_theory][s]);
   }
 }
 
 
-if(correlation_fuction==1){
+//	es una fucion externa, solo sirve para calcular la funcion de correlacion y sigma de cada teoria e imprimirla
+//	es llamada por cosmo7_matter_correlation_function.c
+if(imprime_correlation_fuction==1){
   //spline
   Spline_interp pk(K,P);
   //write
@@ -414,138 +410,67 @@ if(correlation_fuction==1){
 }
 
 
-}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//	CAMB solve everything from redshift infinit, passig from 50 toward final redshift 0
-
-//	RAMSES, in linear scales, must be equivalent to solve matter + L
-//	This would give a differente s8, even for the GR case, because it does not take
-//	into account baryons, massive neutrino, massless neutrinos and radiation
-
-//	we must then, solve matter + L backward from 0 to 50
-//	in order to have ics such that after the forward (or RAMES in linear scales)
-//	we recover the P(0) planck
-
-//	in order to do that, we will not integrate everything again
-//	because it was showed that from 50 to 0, the matter + L + f(R) is an exelent approximation
-//	instead, we sill use the Rodrigo's approximation: consider only matter + L + MG
-
-//	We will take the z=0 values for the fields and their derivatives, given by Rodrigos's
-//	approximation (the same as above), and evolve the reduced system backward until z=50
-
-//	then we will put 
-
-
-void main_rodrigo_2(int id_theory){
-int i,j;
-double q1, q2, q3, q4, k1, k2, k3, k4, trash;
-
-
-if(MG == 1){
-  hs.n=1.;
-  hs.fr0=pow(10.,param_cosmo[0]);
-//        printf("%d %f %le\n", model, hs.n, hs.fr0);
-}
-if(MG == 2){
-  sym.zssb=param_cosmo[0];
-  sym.beta=1.;
-  sym.LL=1.;
-//        printf("%d %le %f %f\n", model, sym.zssb, sym.beta, sym.LL);
-}
-
-for(i=0;i<nk;i++){
-	d[i] = sqrt(Pini[i]);
-	v[i] = (d[i] - sqrt(Paux[i]))/(aini - aaux);
-}
-
-/*Solve the EDO*/
-int Ns = Ndel;	/*number of steps*/
-h = (1.0 - aini)/(Ns-1);
-double hh=0.5*h;
-
-
-for(j=0;j<nk;j++){
-/*Solve the EDO for each k using Runge-Kutta 4*/
-	a = aini;
-	for(i=0;i<Ns;i++){ 
-		q1 = dd(a,    d[j],       v[j]);	k1 = dv(K[j], a,    d[j],       v[j]);
-		q2 = dd(a+hh, d[j]+hh*q1, v[j]+hh*k1);	k2 = dv(K[j], a+hh, d[j]+hh*q1, v[j]+hh*k1);
-		q3 = dd(a+hh, d[j]+hh*q2, v[j]+hh*k2);	k3 = dv(K[j], a+hh, d[j]+hh*q2, v[j]+hh*k2);
-		q4 = dd(a+h,  d[j]+ h*q3, v[j]+ h*k3);	k4 = dv(K[j], a+h,  d[j]+ h*q3, v[j]+ h*k3);
-
-		d[j] = d[j] + h/6.0*(q1 + 2.0*q2 + 2.0*q3 + q4);	
-		v[j] = v[j] + h/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
-		a = a + h;
-	}
-}
-
-for(i=0;i<nk;i++)
-	P[i] = d[i]*d[i]/1.0285;
-
-
-
-
-//	calcula sigma, lo necesito para el perfil de densidad
-if(si_densidad==1){
-  /*Evaluating the square root of variance (\sigma)*/
-  for(int s=first_stack;s<=last_stack;s++){
-    double rad=radio_stack[id_theory][s];
-    sigma_stack[id_theory][s] = sqrt(calc_sigma(nk,rad));
+//	basada en el parrafo anterior
+//	calcula y guarda la funcion de correlacion de la materia
+//	la necesito para la parte externa de los perfiles de densidad
+if(calcula_correlation_fuction==1){
+  //spline
+  Spline_interp pk(K,P);
+  //write
+  double k_left=K[0], k_right=K[nk-1], c=pow(k_right/k_left,1./(Nk-1)), k_new=k_left;//printf("kleft=%le k_right=%le k_new=%le c=%le\n",k_left,k_right,k_new,c);
+  for(i=0;i<Nk;i++){
+    KK[i]=k_new;
+    PP[i]=pk.interp(k_new);
+    k_new*=c;//printf("%le %le\n",KK[i],PP[i]);
   }
+  int id_xi=0;
+  for(double rad=1.e-2; rad<2.; rad+=1.e-1){
+    radio_xi[id_xi]=rad;
+    xi[id_theory][id_xi]=calc_xi(rad);
+    id_xi++;}
+  for(double rad=2.; rad<11.; rad+=2.e-1){
+    radio_xi[id_xi]=rad;
+    xi[id_theory][id_xi]=calc_xi(rad);
+    id_xi++;}
+  for(double rad=11.; rad<20.; rad+=5.e-1){
+    radio_xi[id_xi]=rad;
+    xi[id_theory][id_xi]=calc_xi(rad);
+    id_xi++;}
+  for(double rad=20.; rad<60.; rad+=1.e-0){
+    radio_xi[id_xi]=rad;
+    xi[id_theory][id_xi]=calc_xi(rad);
+    id_xi++;}
+
+
 }
 
 
-//	calcula sigma, lo necesito para el bias
-if(si_bias==1){
-  /*Evaluating the square root of variance (\sigma)*/
-  for(int s=first_bin_bias;s<=last_bin_bias;s++){
-    double rad=radio_bias[id_theory][s];
-    sigma_bias[id_theory][s] = sqrt(calc_sigma(nk,rad));
-  }
 }
 
 
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

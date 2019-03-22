@@ -11,7 +11,7 @@ using namespace std;
 #include "../l/nr3.h"
 #include "../l/cosmo7_parametros.h"
 
-
+int cruzado=1;
 
 //int MG;//=1;		//	teoria de gravedad para calcular sigma: 1=f(R)		2=Symm
 //int si_densidad;//=1;	//	quiero usar densidad?
@@ -24,9 +24,9 @@ int  segunda_vez=0;
 //const int     theories=7;
 int first_theory;//=3;
 int  last_theory;//=3;
-
-
-//char NameTheories[]={'4','5','6','l','A','B','D'};
+//char NameTheories[]={'D','B','A','l','6','5','4'};
+const int param[]={3,2,1,0,-6,-5,-4};
+char NameTheories_correct[]={'4','5','6','l','A','B','D'};
 char NameTheory[]={'f','s'};
 char NameObs[]={'n','d','b','a'};
 int dash[]={2,3,5,1};
@@ -75,7 +75,7 @@ int main(int argc,char **argv){
   sprintf(nomAr,"histo.help");
   TOD=fopen(nomAr,"w+");
 
-  sprintf(nomAr,"cosmo7.gnu");
+  sprintf(nomAr,"cosmo72.gnu");
   GNU=fopen(nomAr,"w+");
 
 
@@ -85,15 +85,46 @@ int main(int argc,char **argv){
   last_theory=first_theory;
 
 
-  sprintf(nomAr,"table_%c_%c.tex",NameTheory[MG-1],NameTheories[first_theory]);
+  if(MG==1){	//	para las cosmologicas cruzadas
+    if(first_theory==0){      ginf=-4.8;   gsup=-2.8;}
+    if(first_theory==1){      ginf=-6.0;   gsup=-4.;}
+    if(first_theory==2){      ginf=-10.0;   gsup=-5.;}
+    if(first_theory==3){      ginf=0.;     gsup=7.e-8;}
+  }
+  else{
+    if(first_theory==3){      ginf=0.;	gsup=1.5;}
+    if(first_theory==4){      ginf=0.;	gsup=2.;}
+    if(first_theory==5){      ginf=1.;	gsup=3.;}
+    if(first_theory==6){      ginf=1.6;	gsup=3.6;}
+  }
+
+/*  if(MG==1){//	para las cosmologias correctas
+    if(first_theory==0){      ginf=-4.2;   gsup=-3.8;}
+    if(first_theory==1){      ginf=-5.2;   gsup=-4.8;}
+    if(first_theory==2){      ginf=-6.2;   gsup=-5.8;}
+    if(first_theory==3){      ginf=0.;     gsup=7.e-8;}
+  }
+  else{
+    if(first_theory==3){      ginf=0.;	gsup=0.4;}
+    if(first_theory==4){      ginf=0.8;	gsup=1.2;}
+    if(first_theory==5){      ginf=1.8;	gsup=2.2;}
+    if(first_theory==6){      ginf=2.8;	gsup=3.2;}
+  }*/
+
+  sprintf(nomAr,"table_%c_%c.tex",NameTheory[MG-1],NameTheories[6-first_theory]);
   TEX=fopen(nomAr,"w");
 
 fprintf(GNU,"reset\n");
 fprintf(GNU,"set terminal pngcairo size 1000,600 enhanced font 'TimesNewRoman,22' dashlength 1.7\n");
 fprintf(GNU,"unset ytics\n");
 fprintf(GNU,"set yr[0:1.05]\n");
+
 if(MG==2) fprintf(GNU,"set xlabel 'z_{SSB}'\n");
 if(MG==1) fprintf(GNU,"set xlabel 'log_{10}|f_{R0}|'\n");
+if(cruzado==1){
+if(MG==2) fprintf(GNU,"set label '|f_{R0}|=10^{%d}' at %.1lf,%.1lf\n",param[last_theory],ginf+0.05*(gsup-ginf),0.9);
+if(MG==1) fprintf(GNU,"set label 'z_{SSB}=%d' at %.1lf,%.1lf\n",param[last_theory],ginf+0.05*(gsup-ginf),0.9);}
+
 if((first_theory==2)&&(MG==1))
 fprintf(GNU,"set key t r\n");
 else if((first_theory==4)&&(MG==2))
@@ -107,7 +138,9 @@ else
 fprintf(GNU,"set xtics 0.2\nset mxtics 2\n");
 if((MG==1)&&(first_theory==3)){
   fprintf(GNU,"set xlabel '|f_{R0}| {/Symbol \264} 10^8'\n");
-  fprintf(GNU,"set format x '%%2.t'\n");
+  if(cruzado==1)
+  fprintf(GNU,"set label 'z_{SSB}=0' at %.1lf,%.1lf\n",ginf+0.05*(gsup-ginf),0.9);
+  fprintf(GNU,"set format x '%%1.0t'\n");
   fprintf(GNU,"set xtics 1e-8\n set mxtics 2\n");
 }
 
@@ -123,37 +156,12 @@ if((MG==1)&&(first_theory==3)){
 
   FILE * NOM;
 
-  sprintf(nomAr,"lista_%d_%d_%d_%d_%d.txt",first_theory,MG,si_densidad,si_abundancia,si_bias);
+  sprintf(nomAr,"lista2_%d_%d_%d_%d_%d.txt",first_theory,MG,si_densidad,si_abundancia,si_bias);
   NOM=fopen(nomAr,"r");
 
 
 
   int i,j;
-/*  if(MG==1){	//	para las cosmologicas cruzadas
-    if(first_theory==0){      ginf=-5.0;   gsup=-3.;}
-    if(first_theory==1){      ginf=-6.0;   gsup=-4.;}
-    if(first_theory==2){      ginf=-7.0;   gsup=-5.;}
-    if(first_theory==3){      ginf=0.;     gsup=0.99e-7;}
-  }
-  else{
-    if(first_theory==3){      ginf=0.;	gsup=1.5;}
-    if(first_theory==4){      ginf=0.;	gsup=2.;}
-    if(first_theory==5){      ginf=1.;	gsup=3.;}
-    if(first_theory==6){      ginf=2.;	gsup=4.;}
-  }*/
-
-  if(MG==1){//	para las cosmologias correctas
-    if(first_theory==0){      ginf=-4.2;   gsup=-3.8;}
-    if(first_theory==1){      ginf=-5.2;   gsup=-4.8;}
-    if(first_theory==2){      ginf=-6.2;   gsup=-5.8;}
-    if(first_theory==3){      ginf=0.;     gsup=7.e-8;}
-  }
-  else{
-    if(first_theory==3){      ginf=0.;	gsup=0.4;}
-    if(first_theory==4){      ginf=0.8;	gsup=1.2;}
-    if(first_theory==5){      ginf=1.8;	gsup=2.2;}
-    if(first_theory==6){      ginf=2.8;	gsup=3.2;}
-  }
 
 
   double chi2min;
@@ -198,11 +206,11 @@ printf("chimin=%lf param=%le id=%d ",chi2min/dof[obs],param_cos[min],min);
   while(integral[med]<0.5*integral[NP-1])
     med++;
   if((MG==1)&&(first_theory==3)){
-    printf("%c%c %le %le ",NameTheory[MG-1],NameTheories[first_theory],
+    printf("%c%c %le %le ",NameTheory[MG-1],NameTheories[6-first_theory],
       pow(10.,param_cos[min]),pow(10,param_cos[med]));
     fprintf(TEX,"%.2lf & %.2lf ",ar(pow(10.,param_cos[min]+8.)),ar(pow(10,param_cos[med]+8.)));}
   else{
-    printf("%c%c %le %le ",NameTheory[MG-1],NameTheories[first_theory],param_cos[min],param_cos[med]);
+    printf("%c%c %le %le ",NameTheory[MG-1],NameTheories[6-first_theory],param_cos[min],param_cos[med]);
     fflush(stdout);
     fprintf(TEX,"%.2lf & %.2lf ",ar(param_cos[min]),ar(param_cos[med]));
     fflush(stdout);}
@@ -232,7 +240,7 @@ for(j=0;j<3;j++){
       fraccion=integral[der]-integral[izq];
       izq++;
     }
-    printf("%le ",0.5*(-param_cos[izq]+param_cos[der]));
+    printf("(%le %le %le) ",0.5*(-param_cos[izq]+param_cos[der]),param_cos[izq],param_cos[der]);
     fprintf(TEX,"& $\\pm$ %.2lf ",ar(0.5*(-param_cos[izq]+param_cos[der])));
   }
 }
@@ -251,7 +259,7 @@ fprintf(TOD,"%le\n",param_cos[min]);
 }	//	observables
 
 fprintf(GNU,"set xr[%le:%le]\n",ginf,gsup);
-fprintf(GNU,"set output 'histo_%c%c.png'\n",NameTheory[MG-1],NameTheories[first_theory]);
+fprintf(GNU,"set output 'histo_%c%c.png'\n",NameTheory[MG-1],NameTheories[6-first_theory]);
 fprintf(GNU,"replot\n");
 fprintf(GNU,"reset\n\n\n");
 fprintf(TEX,"\n");

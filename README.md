@@ -17,7 +17,7 @@ returns: an spherical void catalog
 ## Desity Profile (DP)
 
 ### compute density profile
-Perfiles_2018_octantes.c
+Perfiles_2019_octantes.c
 
 requires: a void catalog and the original tracers catalog
 
@@ -32,7 +32,7 @@ requires: spherical averaged density profile for stacked voids for different MG 
 returns: the best fit parameters (associated a given expression describing the voids density profil) for the different staks and MG cases
 
 ### best density profile
-cosmo7_desciende_perfil.c
+cosmo7_desciende_bias_densidad.c
 
 
 requires: spherical averaged density profile for stacked voids for different MG cases of the same theory
@@ -85,7 +85,7 @@ requires: matter and void catalogs
 return: linear void-matter bias
 
 ### Trend
-cosmo7_mcmc_bias.c
+cosmo8_mcmc_bias_densidad.c
 
 ### best parameters
 cosmo7_desciende_bias.c
@@ -98,7 +98,7 @@ cosmo7_desciende_bias.c
 ## applay AB and DP learned expressions
 
 ### infer cosmology
-cosmo7.c
+cosmo8.c
 
 requires: coefficients of the abundace and density profile fits, AB and DP measurements for the different MG cases
 
@@ -113,7 +113,7 @@ return: given the coefficients that describe the parameters of the AB and DP fit
 
 
 # Void and halo Profiles
-Perfiles_2018_octantes_velocidad.c
+Perfiles_2018_octantes.c
 
 computes halo density profiles and voids density profiles
 

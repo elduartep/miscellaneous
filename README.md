@@ -133,3 +133,8 @@ correl_pix_nuevo.cpp  measure
 
 cosmo7_matter_correlation_function.c  linear-theory
 
+
+
+
+# MG P(k)
+MG_Power_Spectrum.c ./a.out params_mg.dat

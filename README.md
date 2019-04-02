@@ -147,11 +147,11 @@ MG_Power_Spectrum.c ./a.out params_mg.dat
 
 UiO
 
-Bias_pragma_ln.c measures the linear bias using fourier transforms
+Bias_pragma_ln.c measures the linear bias using fourier transform
 
-funcionRadio.c count the number of voids
+funcionRadio.c counts the voids
 
-Perfiles_2019.c measres the void-matter correlation fuction
+Perfiles_2019.c measures the void-matter correlation fuction
 
 DELL
 

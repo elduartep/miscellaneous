@@ -144,10 +144,17 @@ MG_Power_Spectrum.c ./a.out params_mg.dat
 
 
 # planck cosmology analysis
+
 UiO
+
 Bias_pragma_ln.c measures the linear bias using fourier transforms
+
 funcionRadio.c count the number of voids
+
 Perfiles_2019.c measres the void-matter correlation fuction
+
 DELL
+
 cosmo8_covariance.c computes the covariance matrix for the bias, abundance and correlation
-invert_ma.py invert the covariance matrix
+
+invert_ma.py inverts the covariance matrix

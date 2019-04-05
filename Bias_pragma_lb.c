@@ -91,7 +91,7 @@ const int    binb=10;              	//	bines logaritmicos para el bias
 const double limite=0.2*Om*rho_cr;	//	sobredensidad de los voids en [10¹¹ Ms h² / Mpc³]
 
 
-const int nt=24;                //	numero de nucleos
+const int nt=16;                //	numero de nucleos
 
 
 ////////////////////////////            principales variables
@@ -691,6 +691,22 @@ void densidad(const char *NomArch, double dr, int cuantos){
 
   else if(cuantos==4)
   while(fscanf(IN,"%f %f %f %f\n",&a1,&a2,&a3,&a4)!=EOF){	// coordenadas físicas
+    n++;
+    a4=a1*nc/Lbox;		a5=a2*nc/Lbox;			a6=a3*nc/Lbox;
+    a1=fmod(1.*a4+dr,1.*nc);	a2=fmod(1.*a5+dr,1.*nc);	a3=fmod(1.*a6+dr,1.*nc);
+    i=floor(1.*a1);		j=floor(1.*a2);			k=floor(1.*a3);
+    dx=a1-1.*i;			dy=a2-1.*j;			dz=a3-1.*k;
+    tx=1.-dx;			ty=1.-dy;			tz=1.-dz;
+    //condiciones de frontera periodicas
+    ii=(i+1)%nc;		jj=(j+1)%nc;			kk=(k+1)%nc;
+    //incrementando la densidade de las celdas adyacentes	(solo las componentes reales)
+    rho[i+nc*j +nc2*k ]+=1.*tx*ty*tz;		rho[ii+nc*j +nc2*k ]+=1.*dx*ty*tz;
+    rho[i+nc*jj+nc2*k ]+=1.*tx*dy*tz;		rho[ii+nc*jj+nc2*k ]+=1.*dx*dy*tz;
+    rho[i+nc*j +nc2*kk]+=1.*tx*ty*dz;		rho[ii+nc*j +nc2*kk]+=1.*dx*ty*dz;
+    rho[i+nc*jj+nc2*kk]+=1.*tx*dy*dz;		rho[ii+nc*jj+nc2*kk]+=1.*dx*dy*dz;}
+
+  else if(cuantos==3)
+  while(fscanf(IN,"%f %f %f\n",&a1,&a2,&a3)!=EOF){	// coordenadas físicas
     n++;
     a4=a1*nc/Lbox;		a5=a2*nc/Lbox;			a6=a3*nc/Lbox;
     a1=fmod(1.*a4+dr,1.*nc);	a2=fmod(1.*a5+dr,1.*nc);	a3=fmod(1.*a6+dr,1.*nc);
@@ -1725,10 +1741,29 @@ void media_bias(const char *NomArch,int nbin){
 
   printf("j=%d i=%d Mk[j]=%e Mk[i]=%e\n",j,i,Mk[j],Mk[i]);  fflush(stdout);
 
-  VecDoub K(i);
-  VecDoub K2(i);
-  VecDoub B(i);
-  VecDoub S(i);
+  VecDoub K(i);		//	k
+  VecDoub K2(i);	//	k*k
+  VecDoub B(i);		//	bias usando Pm medido
+  VecDoub S(i);		//	error
+  VecDoub V(i);		//	bias usando Pm camb
+  VecDoub Z(i);		//	error
+
+  FILE *CA;
+  CA=fopen("lin_matter_power_spectrum.txt","r");
+  double aux_k,aux_p,aux_id=0;
+  while(fscanf(CA,"%le %le\n",&aux_k,&aux_p)!=EOF)
+    aux_id++;
+  VecDoub Pcamb(aux_id);
+  VecDoub Kcamb(aux_id);
+  aux_id=0;
+  rewind(CA);
+  while(fscanf(CA,"%le %le\n",&aux_k,&aux_p)!=EOF){
+    Pcamb[aux_id]=aux_p;
+    Kcamb[aux_id]=aux_k;
+    aux_id++;
+  }
+  fclose(CA);
+  Spline_interp camb(Kcamb,Pcamb);
 
   printf("antes de interpolar\n");  fflush(stdout);
 
@@ -1741,21 +1776,12 @@ void media_bias(const char *NomArch,int nbin){
     K[b]=Mk[b+j];
     K2[b]=K[b]*K[b];
     B[b]=MPb[b+j]/MP[b+j];	//	<dm*dv+dv*dm>/2   /  <dm*dm>
-    S[b]=B[b]*sqrt(pow(EPb[b+j]/MPb[b+j],2.)+pow(EP[b+j]/MP[b+j],2.));}
-  printf("antes de interpolar\n");  fflush(stdout);
+    S[b]=B[b]*sqrt(pow(EPb[b+j]/MPb[b+j],2.)+pow(EP[b+j]/MP[b+j],2.));
+    V[b]=kernel(K[b])*MPb[b+j]/camb.interp(K[b]);
+    Z[b]=kernel(K[b])*EPb[b+j]/camb.interp(K[b]);}
   Fitab linea1(K2,B,S);
   fprintf(BI,"%e %e ",linea1.a,linea1.siga);
-  printf("primer bias\n");  fflush(stdout);
-
-  for(b=0;b<i;b++){
-    if(MPb2[b+j]>0){
-      B[b]=sqrt(MPb2[b+j]/MP[b+j]);//	sqrt(  <dv*dv>   /  <dm*dm>  )
-      S[b]=B[b]*sqrt(pow(EPb2[b+j]/MPb2[b+j],2.)+pow(EP[b+j]/MP[b+j],2.))*0.5;}
-    else{
-      B[b]=0.;
-      S[b]=sqrt(1./(cantidad[nbin]*MP[b+j]));}}
-  printf("antes de interpolar\n");  fflush(stdout);
-  Fitab linea2(K2,B,S);
+  Fitab linea2(K2,V,Z);
   fprintf(BI,"%e %e ",linea2.a,linea2.siga);
   printf("segundo bias\n");  fflush(stdout);
 

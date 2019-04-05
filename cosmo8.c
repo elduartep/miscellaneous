@@ -49,28 +49,31 @@ double Chi(int id_theory){
       chi2+=pow((teoria_abundancia[id_theory][i]-abundancia[id_theory][i])/error_abundancia[id_theory][i],2.0);
     }
 
-  if(si_bias==1){
-    for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-      bias_aux=bias(sigma_bias[id_theory][id_stack]);
-      chi2+=pow((bias_aux - medida_bias[id_theory][id_stack])/error_bias[id_theory][id_stack],2.0);
-    }
-  }
-
-  if(si_densidad==1){
-    CargaCorrelacion(id_theory);//	pone en xi_actual la correlacion correpondiente a id_theory
-    Spline_interp correl(radio_xi,xi_actual);
-    for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-      if(bias_teoria==1)	bias_aux = bias(sigma_bias[id_theory][id_stack]);
-      else 			bias_aux = medida_bias[id_theory][id_stack];
-      ParametrosSuppress(id_theory,id_stack);
-      for(int i=0;i<bines_radio_densidad[id_stack];i++){
-        if(densidad_teoria==1)	densidad_aux = PerfilUniversal(radio_densidad[i]);
-        else				densidad_aux = (densidad[1][6][i]+densidad[5][6][i])*0.5;
-        if((i!=19)&&(i!=20))
-          chi2+=pow( (densidad_aux + bias_aux * correl.interp(radio_densidad[i]*radio_stack[id_theory][id_stack]) *  Suppress(radio_densidad[i]) - densidad[id_theory][id_stack][i]) / error_densidad[id_theory][id_stack][i],2.0);
+    if(si_bias==1){
+      for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
+        bias_aux=bias(sigma_bias[id_theory][id_stack]);
+        chi2+=pow((bias_aux - medida_bias[id_theory][id_stack])/error_bias[id_theory][id_stack],2.0);
+//        chi2+=pow((bias_aux - medida_bias2[id_theory][id_stack])/error_bias2[id_theory][id_stack],2.0);
+//        chi2+= pow((bias_aux - (medida_bias[id_theory][id_stack] +medida_bias2[id_theory][id_stack])*0.5),2.0)/(pow(error_bias[id_theory][id_stack],2)*0.25 + pow(error_bias2[id_theory][id_stack],2)*0.25);
       }
     }
-  }
+
+    if(si_densidad==1){
+      CargaCorrelacion(id_theory);//	pone en xi_actual la correlacion correpondiente a id_theory
+      Spline_interp correl(radio_xi,xi_actual);
+      for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
+        if(bias_teoria==1)	bias_aux = bias(sigma_bias[id_theory][id_stack]);
+        else 			bias_aux = medida_bias[id_theory][id_stack];
+        ParametrosSuppress(id_theory,id_stack);
+        for(int i=0;i<bines_radio_densidad[id_stack];i++){
+          if(densidad_teoria==1)	densidad_aux = PerfilUniversal(radio_densidad[i]);
+          else				densidad_aux = (densidad[1][5][i]+densidad[5][5][i])*0.5;
+          if((i!=19)&&(i!=20))
+            chi2+=pow( (densidad_aux + bias_aux * correl.interp(radio_densidad[i]*radio_stack[id_theory][id_stack]) *  Suppress(radio_densidad[i]) - densidad[id_theory][id_stack][i]) / error_densidad[id_theory][id_stack][i],2.0);
+        }
+      }
+    }
+
   return chi2;
 }
 
@@ -140,7 +143,7 @@ int main(int argc,char **argv){
   carga_espectro_99();	//	carga: espectro lcdm en 99 y 100
 
 
-  for(int id_theory=0;id_theory<=6;id_theory++){
+  for(int id_theory=0;id_theory<=1;id_theory++){
 
   if(id_theory<3)	MG=1;
   else		MG=2;
@@ -161,9 +164,15 @@ int main(int argc,char **argv){
 
   double sup,inf;
   if(MG==1){
+  //	bias teoria, errores normales
     if(id_theory==0){      inf=-4.4;   sup=-3.;}
-    if(id_theory==1){      inf=-5.2;   sup=-4.;}
-    if(id_theory==2){      inf=-6.6;   sup=-5.;}
+    if(id_theory==1){      inf=-5.2;   sup=-3.9;}
+    if(id_theory==2){      inf=-6.6;   sup=-4.8;}
+    if(id_theory==3){      inf=-10.;   sup=-7.;}
+  //	bias medido, errores internos x 3
+    if(id_theory==0){      inf=-4.5;   sup=-3.2;}
+    if(id_theory==1){      inf=-5.7;   sup=-4.2;}
+    if(id_theory==2){      inf=-7.;   sup=-5.5;}
     if(id_theory==3){      inf=-10.;   sup=-7.;}
 
 if((si_bias==1)&&(si_abundancia==0)&&(si_densidad==0)){
@@ -175,10 +184,18 @@ if((si_bias==1)&&(si_abundancia==0)&&(si_densidad==0)){
 
   }
   else{
-    if(id_theory==3){      inf=1.e-5;  sup=0.5;}
-    if(id_theory==4){      inf=0.5;    sup=1.5;}
-    if(id_theory==5){      inf=2.6;    sup=3.7;}
-    if(id_theory==6){      inf=4.;    sup=5.;}
+
+//	bias teoria, errores normales
+    if(id_theory==3){      inf=-0.5;  sup=1.;}
+    if(id_theory==4){      inf=0.3;    sup=1.8;}
+    if(id_theory==5){      inf=2.6;    sup=3.8;}
+    if(id_theory==6){      inf=3.9;    sup=5.;}
+
+//	bias medido, errores internos x 3
+    if(id_theory==3){      inf=-0.5;  sup=1.;}
+    if(id_theory==4){      inf=0.;    sup=2.;}
+    if(id_theory==5){      inf=2.5;    sup=4.;}
+    if(id_theory==6){      inf=4.2;    sup=5.4;}
 
 if((si_bias==1)&&(si_abundancia==0)&&(si_densidad==0)){
     if(id_theory==3){      inf=1.e-5;  sup=1.5;}

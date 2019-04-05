@@ -48,7 +48,8 @@ void carga(void){
 
 
 
-  param_bd[0]=2.1023;	// alpha	3
+//original
+/*  param_bd[0]=2.1023;	// alpha	3
   param_bd[1]=14.3405;	// beta		4
   param_bd[2]=3.18533;	// c		5
   param_bd[3]=1.07798;	// G		6
@@ -56,10 +57,30 @@ void carga(void){
   param_bd[4]=16.6803;	// A		7
   param_bd[5]=4.87545;	// B		8
   param_bd[6]=1.019;	// C		9
+*/
 
-  param_bd[Npd+0]=0.556;// b1	10
-  param_bd[Npd+1]=0.503;// b2	11
-  param_bd[Npd+2]=3.16;	// b3	12
+//	errro3 bias-medido
+  param_bd[0]=8.965;	// alpha	3
+  param_bd[1]=10.583;	// beta		4
+  param_bd[2]=1.38;	// c		5
+  param_bd[3]=1.0802;	// G		6
+
+//ley de potencia
+  param_bd[4]=10.915;	// A		7
+  param_bd[5]=0.72;	// A		8
+  param_bd[6]=2.6745;	// B		9
+  param_bd[7]=0.4972;	// B		10
+
+//recta y parabola
+  param_bd[4]=1.5;	// A		7
+  param_bd[5]=0.15;	// A		8
+  param_bd[6]=2.5;	// B		9
+  param_bd[7]=0.5;	// B		10
+
+
+  param_bd[Npd+0]=0.557;// b1	11
+  param_bd[Npd+1]=0.4853;// b2	12
+  param_bd[Npd+2]=3.044;	// b3	13
 
   //	solo externo sin maximo local
 /*  param_bd[0]=1.06;	// alpha	3
@@ -129,6 +150,8 @@ double chi2=0.;
       for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
         bias_aux=bias(sigma_bias[id_theory][id_stack]);
         chi2+=pow((bias_aux - medida_bias[id_theory][id_stack])/error_bias[id_theory][id_stack],2.0);
+//        chi2+=pow((bias_aux - medida_bias2[id_theory][id_stack])/error_bias2[id_theory][id_stack],2.0);
+//        chi2+= pow((bias_aux - (medida_bias[id_theory][id_stack] +medida_bias2[id_theory][id_stack])*0.5),2.0)/(pow(error_bias[id_theory][id_stack],2)*0.25 + pow(error_bias2[id_theory][id_stack],2)*0.25);
       }
     }
 
@@ -141,7 +164,7 @@ double chi2=0.;
         ParametrosSuppress(id_theory,id_stack);
         for(int i=0;i<bines_radio_densidad[id_stack];i++){
           if(densidad_teoria==1)	densidad_aux = PerfilUniversal(radio_densidad[i]);
-          else				densidad_aux = (densidad[1][6][i]+densidad[5][6][i])*0.5;
+          else				densidad_aux = (densidad[1][5][i]+densidad[5][5][i])*0.5;
           if((i!=19)&&(i!=20))
             chi2+=pow( (densidad_aux + bias_aux * correl.interp(radio_densidad[i]*radio_stack[id_theory][id_stack]) *  Suppress(radio_densidad[i]) - densidad[id_theory][id_stack][i]) / error_densidad[id_theory][id_stack][i],2.0);
         }
@@ -192,6 +215,7 @@ int no_tercio=1;
 
   LeePerfiles();	//	read data
   LeeBias();		//	read data
+  LeeBias2();		//	read data
   carga();		//	carga: parametros iniciales mcmc bias+densidad
   carga_espectro_99();	//	carga: espectro lcdm en 99 y 100
 
@@ -363,7 +387,7 @@ if ((10*(lineal+1))%ciclo_lineal==0){
   while(delta>delta_min){// numero de puntos a calcular en el espacio de fase
   control++;
   if(control%1000==0){
-    printf(" %dk->%d ",control/1000,id_param);fflush(stdout);}
+    printf(" %dk->%d %le ",control/1000,id_param,lateral_param_bd[0]);fflush(stdout);}
   for(int vecino=1;vecino<=2;vecino++){
   param_bd[id_param]=lateral_param_bd[vecino];
 

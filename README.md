@@ -158,3 +158,21 @@ DELL
 cosmo8_covariance.c computes the covariance matrix for the bias, abundance and correlation
 
 invert_ma.py inverts the covariance matrix
+
+
+
+
+# Halos
+
+HaloFinder2019.c using spherical overdensity
+
+SplitHalosByConcentration.c split so200 halo catalog into low and high concentration estimated by the ratio r200/r400
+
+SplitHalosByConcentrationRockstar.c split rockstar halo catalog into low and high concentration estimated by the ratio (Mvir/M500c)**(1/3)
+
+Perfiles_2019_median.c estimates halo profiles with the median over 48 angular patchs given by healpix
+
+cosmo8_halos_subsample.c subsample rockstar haloes by selecting those which are not inside others
+
+
+

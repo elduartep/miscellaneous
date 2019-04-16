@@ -13,7 +13,6 @@ returns: an spherical void catalog
 
 
 
-
 ## Desity Profile (DP)
 
 ### compute density profile

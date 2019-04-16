@@ -168,11 +168,9 @@ HaloFinder2019.c using spherical overdensity
 
 SplitHalosByConcentration.c split so200 halo catalog into low and high concentration estimated by the ratio r200/r400
 
-SplitHalosByConcentrationRockstar.c split rockstar halo catalog into low and high concentration estimated by the ratio (Mvir/M500c)**(1/3)
-
 Perfiles_2019_median.c estimates halo profiles with the median over 48 angular patchs given by healpix
 
-cosmo8_halos_subsample.c subsample rockstar haloes by selecting those which are not inside others
+cosmo8_halos_subsample.c subsample rockstar haloes by selecting those which are not inside others. And split the resulting halo catalog into low and high concentration estimated by the ratio (Mvir/M500c)**(1/3)
 
 savitzki3.ipynb savitzki4.ipynb : locates the splash-back radius of halos
 

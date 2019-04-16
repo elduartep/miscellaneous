@@ -74,7 +74,7 @@ double du(double a, double u, double v){
 
 /*Solve the equation for the symmetron field*/
 void phi(double aini, double assb, double mu2, double u[], int Ns){
-	double *v, h, a;
+	double *v, h, a, hh;
 	double q1, q2, q3, q4, k1, k2, k3, k4;
 	int i, j;
 	
@@ -87,18 +87,15 @@ void phi(double aini, double assb, double mu2, double u[], int Ns){
 
 	/*Solve the EDO*/
 	h = (1.0 - aini)/(Ns-1);
+        hh = h*0.5;
 
 	/*Solve the EDO for each k using Runge-Kutta 4*/
 	a = aini;
 	for(i=0;i<Ns-1;i++){
-		q1 = du(a, u[i], v[i]);
-		k1 = ddu(a, u[i], v[i], mu2, assb);
-		q2 = du(a+h/2.0, u[i]+h/2.0*q1, v[i]+h/2.0*k1);
-		k2 = ddu(a+h/2.0, u[i]+h/2.0*q1, v[i]+h/2.0*k1, mu2, assb);
-		q3 = du(a+h/2.0, u[i]+h/2.0*q2, v[i]+h/2.0*k2);
-		k3 = ddu(a+h/2.0, u[i]+h/2.0*q2, v[i]+h/2.0*k2, mu2, assb);
-		q4 = du(a+h, u[i]+h*q3, v[i]+h*k3);		
-		k4 = ddu(a+h, u[i]+h*q3, v[i]+h*k3, mu2, assb);
+		q1 = du(a,    u[i],       v[i]);	k1 = ddu(a,    u[i],       v[i],       mu2, assb);
+		q2 = du(a+hh, u[i]+hh*q1, v[i]+hh*k1);	k2 = ddu(a+hh, u[i]+hh*q1, v[i]+hh*k1, mu2, assb);
+		q3 = du(a+hh, u[i]+hh*q2, v[i]+hh*k2);	k3 = ddu(a+hh, u[i]+hh*q2, v[i]+hh*k2, mu2, assb);
+		q4 = du(a+h,  u[i]+h*q3,  v[i]+h*k3);	k4 = ddu(a+h,  u[i]+h*q3,  v[i]+h*k3,  mu2, assb);
 
 		u[i+1] = u[i] + h/6.0*(q1 + 2.0*q2 + 2.0*q3 + q4);	
 		v[i+1] = v[i] + h/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
@@ -147,7 +144,7 @@ double Mu(double k, double a){
 	}
 	if(MG == 2){
 		double lamb2, assb;
-		int i;
+	//	int i;
 		assb = 1.0/(1.0 + sym.zssb);
 		lamb2 = Lamb_sym(a,assb);
 	//	i = (int)floor((a - 0.01)/(1.0 - 0.01)*(Nphi*Ndel - 1.0));
@@ -186,8 +183,8 @@ double calc_sigma(int nk,double rad){
 	double resp;
 	resp = 0.0;
 	for(i=0;i<nk-2;i++)
-		resp += (K[i+1] - K[i])/2.0*(P[i]*pow(K[i],2)*pow(W(K[i],rad),2) + P[i+1]*pow(K[i+1],2)*pow(W(K[i+1],rad),2));
-	return resp/(2.0*PI*PI);
+		resp += (K[i+1] - K[i])*(P[i]*pow(K[i],2)*pow(W(K[i],rad),2) + P[i+1]*pow(K[i+1],2)*pow(W(K[i+1],rad),2));
+	return resp*0.25/(PI*PI);
 }
 
 
@@ -212,8 +209,8 @@ double calc_xi(double rad){
 	double resp;
 	resp = 0.0;
 	for(i=0;i<Nk-2;i++)
-		resp += ( KK[i+1] - KK[i] ) / 2.0 * ( PP[i] * pow(KK[i],2) * W_xi( KK[i] , rad ) + PP[i+1] * pow( KK[i+1] , 2 ) * W_xi( KK[i+1] ,rad));
-	return resp/(2.0*PI*PI);
+		resp += ( KK[i+1] - KK[i] ) * ( PP[i] * pow(KK[i],2) * W_xi( KK[i] , rad ) + PP[i+1] * pow( KK[i+1] , 2 ) * W_xi( KK[i+1] ,rad));
+	return resp*0.25/(PI*PI);
 }
 
 
@@ -232,7 +229,7 @@ inline double W_dW(double x, double &w, double &dw){//	funcion ventana al cuadra
 
 
 
-VecDoub Pini(nk), Paux(nk), d(nk), v(nk); double aini, aaux, h, a;
+double aini, aaux, h, a;
 
 
 void carga_espectro_99(void)
@@ -256,14 +253,15 @@ cosmo.As=As;//1.085e-09;
 cosmo.ns=ns;//1.;
 cosmo.T=T;
 cosmo.Om = cosmo.Ob + cosmo.Odm;
-zini = 50.0;
+zini = 99.0;
 
 
 
 
 
 /*Read the CAMB output (z=99)*/
-camb = fopen("/home/cosmousp/Descargas/CAMB/planck_folder/planck_2018_matterpower_99.dat", "r");
+//camb = fopen("/home/cosmousp/Descargas/CAMB/planck_folder/planck_2018_matterpower_99.dat", "r");
+camb = fopen("/home/cosmousp/Descargas/CAMB/isis_folder/isis_matterpower_99.dat", "r");
 if (camb == NULL) {
 	printf("Unable to open %s\n", "test_matterpower99.dat");
 	exit(0);
@@ -275,8 +273,10 @@ while(fscanf(camb,"%lf %lf", &K[nk], &Pini[nk])!=EOF){
 }
 fclose(camb);
 
+
 /*Read the aux power spectrum (z=100)*/
-camb = fopen("/home/cosmousp/Descargas/CAMB/planck_folder/planck_2018_matterpower_100.dat", "r");
+//camb = fopen("/home/cosmousp/Descargas/CAMB/planck_folder/planck_2018_matterpower_100.dat", "r");
+camb = fopen("/home/cosmousp/Descargas/CAMB/isis_folder/isis_matterpower_100.dat", "r");
 if (camb == NULL) {
 	printf("Unable to open %s\n", "test_matterpower100.dat");
 	exit(0);
@@ -292,7 +292,7 @@ fclose(camb);
 
 /*Construct the initial condictions*/
 aini = 1.0/(1.0 + zini);
-aaux = 1.0/(1.5 + zini);
+aaux = 1.0/(2.0 + zini);
 
 printf("echo\n");fflush(stdout);
 }
@@ -377,6 +377,15 @@ if((si_bias==1)||(si_densidad==1)){
 //	es una fucion externa, solo sirve para calcular la funcion de correlacion y sigma de cada teoria e imprimirla
 //	es llamada por cosmo7_matter_correlation_function.c
 if(imprime_correlation_fuction==1){
+
+  FILE * ES;
+  sprintf(nomAr,"../%c/lin_matter_power_spectrum.txt",NameTheories[id_theory]);
+  ES=fopen(nomAr,"w+");
+  for(i=0;i<nk;i++){
+    fprintf(ES,"%le %le\n",K[i],P[i]);
+  }
+  fclose(ES);
+
   //spline
   Spline_interp pk(K,P);
   //write
@@ -393,7 +402,7 @@ if(imprime_correlation_fuction==1){
   XI=fopen(nomAr,"w+");
   sprintf(nomAr,"../%c/lin_matter_sigma.txt",NameTheories[id_theory]);
   SI=fopen(nomAr,"w+");
-  for(double rad=1.e-2; rad<2.; rad+=1.e-1){
+  for(double rad=5.e-3; rad<2.; rad+=1.e-1){
     fprintf(XI,"%le %le\n",rad,calc_xi(rad));
     fprintf(SI,"%le %le\n",rad,sqrt(calc_sigma(nk,rad)));}
   for(double rad=2.; rad<11.; rad+=2.e-1){
@@ -402,7 +411,7 @@ if(imprime_correlation_fuction==1){
   for(double rad=11.; rad<20.; rad+=5.e-1){
     fprintf(XI,"%le %le\n",rad,calc_xi(rad));
     fprintf(SI,"%le %le\n",rad,sqrt(calc_sigma(nk,rad)));}
-  for(double rad=20.; rad<60.; rad+=1.e-0){
+  for(double rad=20.; rad<120.; rad+=1.e-0){
     fprintf(XI,"%le %le\n",rad,calc_xi(rad));
     fprintf(SI,"%le %le\n",rad,sqrt(calc_sigma(nk,rad)));}
   fclose(XI);
@@ -426,7 +435,7 @@ if(calcula_correlation_fuction==1){
     k_new*=c;//printf("%le %le\n",KK[i],PP[i]);
   }
   int id_xi=0;
-  for(double rad=1.e-2; rad<2.; rad+=1.e-1){
+  for(double rad=5.e-3; rad<2.; rad+=1.e-1){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
     id_xi++;}
@@ -438,10 +447,10 @@ if(calcula_correlation_fuction==1){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
     id_xi++;}
-  for(double rad=20.; rad<60.; rad+=1.e-0){
+  for(double rad=20.; rad<120.; rad+=1.e-0){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
-    id_xi++;}
+    id_xi++;}//printf("id_xi=%d\n",id_xi);fflush(stdout);
 
 
 }

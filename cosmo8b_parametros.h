@@ -83,7 +83,7 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
 
 
 
-  #define Np 1		//	fR0 o zSSB
+  #define Np 3		//	fR0 o zSSB, plus A and B
   int seed;// 3255
   const double dcc=1.686;
   const double pi=4.*atan(1.);
@@ -156,7 +156,7 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
 
   //	bines stack a analizar
   const int   bin_stack=8;
-  const int first_stack=1;
+  const int first_stack=0;
   const int  last_stack=7;
 
   //	bines radiales para el perfil de densidad
@@ -197,8 +197,8 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   double medida_bias2[theories][bin_stack];	//	medida perfil
   double  error_bias2[theories][bin_stack];	//	medida perfil
 //4+1+7
-  #define Npd 8	//	densidad: parametros geometricos, c,a,b,G; d1,d2,l1,l2		Number of Parameters for Density
-  #define Npbb 3		//	bias: coeficientes, potencias, cortes, constantes
+  #define Npd 4+3*7*8	//	densidad: parametros geometricos, c,a,b,G; d1,d2,l1,l2		Number of Parameters for Density
+  #define Npbb 0		//	bias: coeficientes, potencias, cortes, constantes
   #define Npbd (Npd+Npbb)	//	juntando los dos anteriores
   //	parametros libres del modelo conjunto bias perfil
   double param_bd[Npbd];

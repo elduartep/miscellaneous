@@ -14,8 +14,8 @@ void CargaAjustesBiasDensidad(void){
   char nomAr[200];
   sprintf(nomAr,"lista_bias_densidad_t%d-%d_b%d_d%d.txt",first_theory,last_theory,0,1);
   NOM=fopen(nomAr,"r");
-  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le %le %le\n",&n_salta_aux,&co,
-&param_bd[0],&param_bd[1],&param_bd[2],&param_bd[3],&param_bd[4],&param_bd[5],&param_bd[6],&param_bd[7],&param_bd[8],&param_bd[9])!=EOF);
+  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le %le %le %le\n",&n_salta_aux,&co,
+&param_bd[0],&param_bd[1],&param_bd[2],&param_bd[3],&param_bd[4],&param_bd[5],&param_bd[6],&param_bd[7],&param_bd[8],&param_bd[9],&param_bd[10])!=EOF);
   fclose(NOM);
   printf("hecho\n");fflush(stdout);
 }
@@ -31,8 +31,8 @@ void CargaAjustesBias(void){
   char nomAr[200];
   sprintf(nomAr,"lista_bias_densidad_t%d-%d_b%d_d%d.txt",first_theory,last_theory,1,0);
   NOM=fopen(nomAr,"r");
-  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le %le %le\n",&n_salta_aux,&co,
-&aux,&aux,&aux,&aux,&aux,&aux,&aux,&b0,&b1,&b2)!=EOF);
+  while(fscanf(NOM,"%d %le %le %le %le %le %le %le %le %le %le %le %le\n",&n_salta_aux,&co,
+&aux,&aux,&aux,&aux,&aux,&aux,&aux,&aux,&b0,&b1,&b2)!=EOF);
   fclose(NOM);
   printf("b0=%le b1=%le b2=%le\n",b0,b1,b2);
   printf("hecho\n");fflush(stdout);
@@ -53,8 +53,6 @@ else
 
 
 
-//	tomado de		mcmc_todo_libre5nuevofast_2.c
-// lee el archivo que contiene los perfiles
 void LeeBias(void){
   int i,j;
   double aux;
@@ -64,15 +62,50 @@ void LeeBias(void){
 
 for(int id_theory=0;id_theory<=6;id_theory++){
   sprintf(NomArch,"../%c/bv_03.txt",NameTheories[id_theory]);
-
   Ud=fopen(NomArch,"r");
   for(j=0;j<bin_stack;j++)
-    fscanf(Ud,"%lf %lf %le %le %le %le\n"
-      ,&radio_bias[id_theory][j], &aux, &medida_bias[id_theory][j], &error_bias[id_theory][j],&aux,&aux);
+    fscanf(Ud,"%lf %lf %le %le %le %le\n",&radio_bias[id_theory][j], &aux, &medida_bias[id_theory][j], &error_bias[id_theory][j],&aux,&aux);
 
   fclose(Ud);
 }
   printf("hecho\n");fflush(stdout);
+}
+
+
+
+void LeeBias2(void){
+  int i,j;
+  double aux,error;
+  printf("leyendo bias...");fflush(stdout);
+  char NomArch[300];
+  FILE * Ud;
+
+for(int id_theory=0;id_theory<=6;id_theory++){
+  sprintf(NomArch,"ajuste_BIAS_%c.txt",NameTheories[id_theory]);
+  Ud=fopen(NomArch,"r");
+  for(j=0;j<bin_stack;j++)
+    fscanf(Ud,"%le %le %le %le\n",&radio_bias2[id_theory][j], &aux, &medida_bias2[id_theory][j], &error_bias2[id_theory][j]);
+  fclose(Ud);
+}
+
+  printf("hecho\n");fflush(stdout);
+/*
+//	imprimiendo la media de las dos medidas
+for(int id_theory=0;id_theory<=6;id_theory++){
+  sprintf(NomArch,"BIAS_%c.txt",NameTheories[id_theory]);
+  Ud=fopen(NomArch,"w+");
+  for(j=0;j<bin_stack;j++){
+    aux=(medida_bias[id_theory][j]+medida_bias2[id_theory][j])*0.5;
+    error=pow(error_bias[id_theory][j],2)*0.25 + pow(error_bias2[id_theory][j],2)*0.25;
+    error+=pow(medida_bias[id_theory][j]-aux,2)*0.5 + pow(medida_bias2[id_theory][j]-aux,2)*0.5;
+    medida_bias[id_theory][j]=aux;
+    error_bias[id_theory][j]=sqrt(error);
+    fprintf(Ud,"%le %le %le\n",radio_bias[id_theory][j], medida_bias[id_theory][j], error_bias[id_theory][j]);
+  }
+  fclose(Ud);
+}
+*/
+
 }
 
 
@@ -88,8 +121,17 @@ for(int id_theory=0;id_theory<=6;id_theory++){
 
 
 void ParametrosSuppress(int t, int s){
- A=param_bd[4]*pow(radio_stack[t][s],-1);//param_bd[6]
- B=param_bd[5];
+//ley de potencia
+//A=param_bd[4]*pow(radio_stack[t][s],-param_bd[5]);
+//B=param_bd[6]*pow(radio_stack[t][s],+param_bd[7]);
+
+//recta y parabola
+A=param_bd[4]+pow(radio_stack[t][s]-6.9,2)*param_bd[5];
+B=param_bd[6]+radio_stack[t][s]*param_bd[7];
+
+//cuando todo es libre, completamente libre, incluyendo el bias
+//A=param_bd[4+3*(last_theory-first_theory+1)*(s-first_stack)+3*(t-first_theory)+0];
+//B=param_bd[4+3*(last_theory-first_theory+1)*(s-first_stack)+3*(t-first_theory)+1];
 }
 
 
@@ -98,10 +140,19 @@ double Suppress(double y){
 return exp(-A*pow(y,-B));
 }
 
+//	calculados usando cosmo8b_desiende_bias_densidad.c
+double alpha=7.593649e+00;
+double beta=9.381333e+00;
+double ca=1.415600e+00;
+double cb=1.106479e+00;
 
 double PerfilUniversal(double r){
 //return -dc/(1.+pow(r/param_bd[0],param_bd[1]));
 
+//fijo
+//return -dc*(1.-pow(r/ca,alpha))/(1.+pow(r/cb,beta));
+
+//normal
 return -dc*(1.-pow(r/param_bd[2],param_bd[0]))/(1.+pow(r/param_bd[3],param_bd[1]));
 
 //return -dc*0.5*( (1.-pow(r/2.3,2))/(1.+pow(r/1.09,20))
@@ -115,7 +166,7 @@ return -dc*(1.-pow(r/param_bd[2],param_bd[0]))/(1.+pow(r/param_bd[3],param_bd[1]
 
 
 void CargaCorrelacion(int id_theory){
-  for(int i=0;i<124;i++)
+  for(int i=0;i<max_id_xi;i++)
     xi_actual[i]=xi[id_theory][i];
 }
 
@@ -195,7 +246,7 @@ for(int id_theory=0;id_theory<=6;id_theory++){
   for(int id_theory=0;id_theory<=6;id_theory++)
     for(j=0;j<bin_stack;j++)
       for(i=0;i<20;i++)
-        error_densidad[id_theory][j][i]=sqrt(error_inner_profile[i]);
+        error_densidad[id_theory][j][i]=3.*sqrt(error_inner_profile[i]);
 #endif
 
   cout<<"echo"<<endl;

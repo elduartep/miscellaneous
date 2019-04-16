@@ -174,5 +174,6 @@ Perfiles_2019_median.c estimates halo profiles with the median over 48 angular p
 
 cosmo8_halos_subsample.c subsample rockstar haloes by selecting those which are not inside others
 
+savitzki3.ipynb savitzki4.ipynb : locates the splash-back radius of halos
 
 

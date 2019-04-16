@@ -18,12 +18,28 @@
 //      TAKE CARE: RIGHT NOW I AM NOT READING VELOCITY FILES
 
 
+//	estimating the individual halo profile as being the median among 48 healpix patchs, it helps to erase the sub-halo contributions to the host halo profile
+
+
+// g++ Perfiles_2019_median.c -I /mn/stornext/u3/ederld/Healpix_3.50/include -L /mn/stornext/u3/ederld/Healpix_3.50/lib/  -lchealpix -lm -fopenmp
+
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "/mn/stornext/u3/ederld/l/parametros_rockstar.h"
+#include "/mn/stornext/u3/ederld/l/nr3.h"
+#include "/mn/stornext/u3/ederld/l/sort.h"
+
+//#include <inttypes.h>		//	conflict with nr3 types
+#include "chealpix.h"
+
+  //	healpix
+  long nside=2;
+  const long npix=48;
+  VecDoub versor(npix);
+
 
 const int   voids_esfericos=1;
 const int   NumCuadrantes=8;
@@ -64,6 +80,11 @@ const double escala=0.05;	//	300*0.05=15, ... , 180*0.05=9, 160*0.05=8. da el r/
 
 const int   NumMax_bin_rad_halos=50;
 const int   NumMax_bin_rad_voids=300;//has to be greater or equal to Num_bin_rad_voids[0];		//	520 resultaron ser muchos, se demora demasiado
+
+
+//	healpix contributions for the spherical profile
+double **perfil_healpix;
+
 
 //	para guardar el perfil individual de cada objeto (indice objeto, indice bin radial)
 double **perfil_individual;
@@ -145,42 +166,41 @@ double   aux1_stack,c_stack;	//	variables auxiliares para los Num_bines del stac
   char teoria_radial[500];	//	a partir de la densidad medida
 
 
-
 void archivos_halos(void){
   //	so 200
 /*  sprintf(catalogo,                  "halos_%s%s" ,prefijo,caso);
-  sprintf(densidad,       "densidad_halos_%s%s" ,prefijo,caso);
-  sprintf(densidadI,     "densidadI_halos_%s%s" ,prefijo,caso);
-  sprintf(info_bines,  "info_radial_halos_%s%s" ,prefijo,caso);
+  sprintf(densidad,       "densidad_m_halos_%s%s" ,prefijo,caso);
+  sprintf(densidadI,     "densidadI_m_halos_%s%s" ,prefijo,caso);
+  sprintf(info_bines,  "info_radial_m_halos_%s%s" ,prefijo,caso);
 */  //	so 200 low concentration
 /*  sprintf(catalogo,                  "halos_lowc_%s%s" ,prefijo,caso);
-  sprintf(densidad,       "densidad_lowc_halos_%s%s" ,prefijo,caso);
-  sprintf(densidadI,     "densidadI_lowc_halos_%s%s" ,prefijo,caso);
-  sprintf(info_bines,  "info_radial_lowc_halos_%s%s" ,prefijo,caso);
+  sprintf(densidad,       "densidad_m_lowc_halos_%s%s" ,prefijo,caso);
+  sprintf(densidadI,     "densidadI_m_lowc_halos_%s%s" ,prefijo,caso);
+  sprintf(info_bines,  "info_radial_m_lowc_halos_%s%s" ,prefijo,caso);
 */  //	so 200 high concentration
 /*  sprintf(catalogo,                  "halos_highc_%s%s" ,prefijo,caso);
-  sprintf(densidad,       "densidad_highc_halos_%s%s" ,prefijo,caso);
-  sprintf(densidadI,     "densidadI_highc_halos_%s%s" ,prefijo,caso);
-  sprintf(info_bines,  "info_radial_highc_halos_%s%s" ,prefijo,caso);
+  sprintf(densidad,       "densidad_m_highc_halos_%s%s" ,prefijo,caso);
+  sprintf(densidadI,     "densidadI_m_highc_halos_%s%s" ,prefijo,caso);
+  sprintf(info_bines,  "info_radial_m_highc_halos_%s%s" ,prefijo,caso);
 */
 
 
   //	rockstar isolated
 /*  sprintf(catalogo,              "out_isolated.list");
-  sprintf(densidad,       "densidad_halos.list");
-  sprintf(densidadI,     "densidadI_halos.list");
-  sprintf(info_bines,  "info_radial_halos.list");
+  sprintf(densidad,       "densidad_m_halos.list");
+  sprintf(densidadI,     "densidadI_m_halos.list");
+  sprintf(info_bines,  "info_radial_m_halos.list");
 */  //	rockstar low concentration
 /*  sprintf(catalogo,                  "halos_lowc.list");
-  sprintf(densidad,       "densidad_lowc_halos.list");
-  sprintf(densidadI,     "densidadI_lowc_halos.list");
-  sprintf(info_bines,  "info_radial_lowc_halos.list");
+  sprintf(densidad,       "densidad_m_lowc_halos.list");
+  sprintf(densidadI,     "densidadI_m_lowc_halos.list");
+  sprintf(info_bines,  "info_radial_m_lowc_halos.list");
 */  //	rockstar high concentration
-  sprintf(catalogo,                  "halos_highc.list");
-  sprintf(densidad,       "densidad_highc_halos.list");
-  sprintf(densidadI,     "densidadI_highc_halos.list");
-  sprintf(info_bines,  "info_radial_highc_halos.list");
-
+/*  sprintf(catalogo,                  "halos_highc.list");
+  sprintf(densidad,       "densidad_m_highc_halos.list");
+  sprintf(densidadI,     "densidadI_m_highc_halos.list");
+  sprintf(info_bines,  "info_radial_m_highc_halos.list");
+*/
 
   sprintf(tangencial,	  "tangencial_halos_%s%s" ,prefijo,caso);
   sprintf(dispersion,	  "dispersion_halos_%s%s" ,prefijo,caso);
@@ -194,11 +214,11 @@ void archivos_voids(void){
   else
     sprintf(esfericidad,"union");
   sprintf(catalogo,	                "%s_%s%s"	,esfericidad,prefijo,caso);
-  sprintf(densidad,          "densidad_n_%s_%s%s"	,esfericidad,prefijo,caso);
-  sprintf(densidadI,        "densidadI_n_%s_%s%s"	,esfericidad,prefijo,caso);
-  sprintf(radial,              "radial_n_%s_%s%s"	,esfericidad,prefijo,caso);
-  sprintf(teoria_radial,"teoria_radial_n_%s_%s%s"	,esfericidad,prefijo,caso);
-  sprintf(info_bines,     "info_radial_n_%s_%s%s"	,esfericidad,prefijo,caso);
+  sprintf(densidad,          "densidad_m_%s_%s%s"	,esfericidad,prefijo,caso);
+  sprintf(densidadI,        "densidadI_m_%s_%s%s"	,esfericidad,prefijo,caso);
+  sprintf(radial,              "radial_m_%s_%s%s"	,esfericidad,prefijo,caso);
+  sprintf(teoria_radial,"teoria_radial_m_%s_%s%s"	,esfericidad,prefijo,caso);
+  sprintf(info_bines,     "info_radial_m_%s_%s%s"	,esfericidad,prefijo,caso);
 }
 
 
@@ -401,6 +421,16 @@ printf("alloca_perfiles_individuales...\n");fflush(stdout);
   for(int p = 0; p < NumObjetos; p++) 
     if(!(perfil_individual2[p] = (double *) malloc(Num_bin * sizeof(double)))){
       fprintf(stderr, "failed to allocate memory perfil_individual2.\n");
+      fflush(stderr);
+      exit(0);}
+
+  if(!( perfil_healpix= (double **) malloc(npix * sizeof(double *)))){
+    fprintf(stderr, "failed to allocate memory perfil_healpix.\n");
+    fflush(stderr);
+    exit(0);}
+  for(int p = 0; p < npix; p++) 
+    if(!(perfil_healpix[p] = (double *) malloc(Num_bin * sizeof(double)))){
+      fprintf(stderr, "failed to allocate memory perfil_healpix.\n");
       fflush(stderr);
       exit(0);}
 
@@ -984,7 +1014,7 @@ void perfil_densidad(int voids){
 int ind_JN,ind_i,ind_j,ind_k;		//	variables cuadrante
 int id_stack;
 int i,j,k,l,p,ii,jj,kk,ijk;
-int s,b,o;
+int s,b,o,h;
 double x_x,y_y,z_z,r_r;
 double r3;
 double min2=rad_min_halos*rad_min_halos,aux_id_stack;
@@ -1042,6 +1072,11 @@ printf("calcula pefil individual...\n");fflush(stdout);
 //printf("l=%d carga=%le, ",l,Mo[l]);fflush(stdout);
 
     if((Mo[l]>=carga_min)&&(Mo[l]<carga_max)){
+      //	clean perfil_healpix, wich is suposed to be an individual estimator of the density
+      for(h=0;h<npix;h++)
+        for(b=0;b<Num_bin;b++)
+          perfil_healpix[h][b]=0.;
+
       aux_id_stack=aux1_stack*log(Mo[l]/carga_min);
       id_stack=floor(aux_id_stack);
       CargaStack[id_stack]+=Mo[l];   //	carga acumulada en el stack
@@ -1093,27 +1128,32 @@ printf("calcula pefil individual...\n");fflush(stdout);
 //	descomentar los pragmas después de verificar que todo está funcionando, y comparar los tiempos
 //            #pragma omp parallel
             {
-            double dx,dy,dz,dist_priv,aux_priv;
+            double dist_priv,aux_priv;
             int Num_bin_priv,id_priv;
-            int cont_priv[NumMax_bin_rad_voids]={0};
-            int cont_r_priv_Num_bin0=0;
+            int cont_priv[npix][NumMax_bin_rad_voids]={{0}};
+            int cont_r_priv_Num_bin0[npix]={0};
+            long id_pix;  double vec[3];
 //            #pragma omp for
             for(p=0;p<Ocu[ijk];p++){
               id_priv=Id[ijk][p];
 
-              dx=X[id_priv]-x_x;
-              dy=Y[id_priv]-y_y;
-              dz=Z[id_priv]-z_z;
-                    if(dx>nc*0.5)        dx-=nc*1.;
-              else if(dx<-nc*0.5)        dx+=nc*1.;
-                    if(dy>nc*0.5)        dy-=nc*1.;
-              else if(dy<-nc*0.5)        dy+=nc*1.;
-                    if(dz>nc*0.5)        dz-=nc*1.;
-              else if(dz<-nc*0.5)        dz+=nc*1.;
-              dist_priv=dx*dx+dy*dy+dz*dz;
+              vec[0]=X[id_priv]-x_x;
+              vec[1]=Y[id_priv]-y_y;
+              vec[2]=Z[id_priv]-z_z;
+                   if(vec[0]>nc*0.5)         vec[0]-=nc*1.;
+              else if(vec[0]<-nc*0.5)        vec[0]+=nc*1.;
+                   if(vec[1]>nc*0.5)         vec[1]-=nc*1.;
+              else if(vec[1]<-nc*0.5)        vec[1]+=nc*1.;
+                   if(vec[2]>nc*0.5)         vec[2]-=nc*1.;
+              else if(vec[2]<-nc*0.5)        vec[2]+=nc*1.;
+              dist_priv=vec[0]*vec[0]+vec[1]*vec[1]+vec[2]*vec[2];
 
               if(dist_priv<(max_stack*max_stack*r_r)){   //	si es vecina de verdad 5x...
 
+                //return the id for the pixel targeted by vec
+                vec2pix_ring(nside, vec, &id_pix);
+
+                //return the id for the rafial bin
                 if(voids==0)
                   aux_priv=aux1*log(dist_priv/(r_r*min2));
                 else
@@ -1121,16 +1161,17 @@ printf("calcula pefil individual...\n");fflush(stdout);
                 Num_bin_priv=floor(aux_priv);
 
                 if(Num_bin_priv>=0)           //	cascara (Num_bin_priv , Num_bin_priv+1)
-                  cont_priv[Num_bin_priv]++;
+                  cont_priv[id_pix][Num_bin_priv]++;
                 else
-                  cont_r_priv_Num_bin0++;     //	esfera < min   ~ nucleo
+                  cont_r_priv_Num_bin0[id_pix]++;     //	esfera < min   ~ nucleo
               }
-            } 
+            }
 //            #pragma omp critical
             {
 
-            for(b=0;b<Num_bin_rad[id_stack];b++){
-              perfil_individual[l][b]+=double(cont_priv[b])*r3;
+            for(h=0;h<npix;h++){
+              for(b=0;b<Num_bin_rad[id_stack];b++)
+                perfil_healpix[h][b]+=double(cont_priv[h][b]*npix)*r3;//contribution to the density (healpix,rad)
             }
 
             }
@@ -1140,6 +1181,15 @@ printf("calcula pefil individual...\n");fflush(stdout);
       }  //	i
 
       NumObjetosJNS[ind_JN][id_stack]++;       //	número de objetos en la submuestra JN del Num_bin_stack
+
+      //perfil_healpix already contains the density of the (healpix,rad) split for the object l
+	//is time to select the median value among the healpixels
+      for(b=0;b<Num_bin;b++){
+        for(h=0;h<npix;h++)
+          versor[h]=perfil_healpix[h][b];//	contains the density of the healpixels for a given radius b
+        sort(versor);			//	sorts the density of the healpixels
+        perfil_individual[l][b]=(versor[23]+versor[24])*0.5;//	median of the healpixels for a given radius b
+      }
 
     }  //	if objeto \in algun Num_bin
   }  //	ciclo objetos

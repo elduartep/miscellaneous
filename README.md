@@ -174,4 +174,6 @@ cosmo8_halos_subsample.c subsample rockstar haloes by selecting those which are 
 
 savitzki3.ipynb savitzki4.ipynb : locates the splash-back radius of halos
 
-SplashBack.cpp run the toy model for predicting the splash-back radius on halos
+SplashBack_symm.cpp run the toy model for predicting the splash-back radius on halos in symmetron cosmologies
+
+SplashBack_fR.cpp run the toy model for predicting the splash-back radius on halos in H-S f(R) cosmologies

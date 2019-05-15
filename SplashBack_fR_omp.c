@@ -13,6 +13,8 @@
 //  already made for other people under the self-similar approximation (in EdS space)
 
 
+// r and k static sampling
+
 #include <iostream>
 #include <fstream>
 #include <cmath>

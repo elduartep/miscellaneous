@@ -42,17 +42,29 @@ double g(double x){ double y3=abs(x*x*x); return sqrt(y3 *y3 + y3) - y3;}
 double fNFW(double x){ return log(1. + x) - x/(1. + x);}
 double Mass(double a, double r, double con){ return Mi *fNFW(con *abs(r) /rvir) /fNFW(con) *pow(a /avir, Gama);}
 
+int MG;
+
+double enhancement_x(double x1, double a){
+  if(MG==0) return 1.;
+  else return (1.0 + 2.0 *g(Ri *(x1 + a/ai) /rs(a)) /(3.0 *beta(a)));
+}
+
+double enhancement_r(double r1, double a){
+  if(MG==0) return 1.;
+  else return (1.0 + 2.0 *g(r1 /rs(a)) /(3.0 *beta(a)));
+}
+
 //	constant mass
 double x1prime(double x2){return x2;}
 double x2prime(double x1, double x2, double a){
   return -(1.0 +a *HprimeOverH(a)) *x2 /a +(1.0 + a *HprimeOverH(a)) *x1 /a /a - Om *H02 *pow(a,-5) /(2.0 *H2(a))
-*(1.0 + 2.0 *g(Ri *(x1 + a/ai) /rs(a)) /(3.0 *beta(a))) *(x1 +a /ai) *((1. + di) *pow(ai *x1/a + 1.0, -3) - 1.);}
+*enhancement_x(x1,a) *(x1 +a /ai) *((1. + di) *pow(ai *x1/a + 1.0, -3) - 1.);}
 
 //	FRW mass
 double r1prime(double r2){return r2;}
 double r2prime(double r1, double r2, double a){
   return  -(1.0 +a *HprimeOverH(a)) *r2 /a + H02 *Ol *abs(r1) *pow(a *H(a),-2)
-  -r1/abs(r1) *GMs *Mass(a, r1, 3.0) *pow(a *H(a) *r1,-2) *(1.0 + 2.0 *g(r1 /rs(a)) /(3.0 *beta(a)));}
+  -r1/abs(r1) *GMs *Mass(a, r1, 3.0) *pow(a *H(a) *r1,-2) *enhancement_r(r1,a);}
 
 
 ///////////////////////////////////////////////////
@@ -66,7 +78,7 @@ void iterate(int printing){
   double r1,r2;
 
   FILE *SP;
-  SP=fopen("sp.dat","w+");
+  SP=fopen("sp_dgp.dat","w+");
 
   //	integrating with constant mass
   double steep=5.0e-1;
@@ -132,21 +144,23 @@ int main(){
 
 FILE * GA;
 char FileName[200];
-int rc_ind;
-for(rc_ind=0;rc_ind<10;rc_ind++){
-rc = double(rc_ind+1)*0.03 *c / H0;
+int rc_ind=-1;
+//for(rc_ind=-1;rc_ind<10;rc_ind++){
+if(rc_ind==-1){	rc=0.; 					MG=0;}
+else{		rc = double(rc_ind+1)*0.03 *c / H0;	MG=1;}
 sprintf(FileName,"sp_gama_rc%d.dat",rc_ind);
 GA=fopen(FileName,"w+");
 fprintf(GA,"# rc=%le\n",rc);
-for(Gama=1.;Gama<5.;Gama+=0.1){
-  di = 2.2e-5;
-  Ri = pow(3.0 *Mi /(4.0 *pi *Om *pow(ai,-3) *rhocr *(1.0 + di)), 1.0 /3);
+//for(Gama=1.;Gama<5.;Gama+=0.1){
+Gama=3.;
+  di = 2.81e-5;
+  Ri = pow(3.0 *Mi /(4.0 *pi *Om *rhocr *pow(ai,-3) *(1.0 + di)), 1.0 /3);printf("Ri=%le\n",Ri);
   double ddi=di/10;
   double tolerance=1.0e-4;
   int sign=1;
   a=ai;
-  while(abs(a-1.0)>tolerance){
-    iterate(0);
+//  while(abs(a-1.0)>tolerance){
+    iterate(1);
     printf("%le ",a);fflush(stdout);
     if((a-1.0)>0.){
       if(sign<0) ddi*=-0.5;
@@ -158,12 +172,14 @@ for(Gama=1.;Gama<5.;Gama+=0.1){
       else;
       di+=ddi;
       sign=-1;}
-  }
+//  }	//a=1
   printf("\n\n");
   fprintf(GA,"%le %le\n",Gama,abs(rsp/rvir));fflush(GA);
-}
+//}	//gamma
 fclose(GA);
-}
+//}	//rc
+
+
 //  iterate(1);
 
     printf("\nata=%le\n",ata);

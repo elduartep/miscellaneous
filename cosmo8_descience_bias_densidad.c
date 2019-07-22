@@ -47,49 +47,57 @@ void carga(void){
 //////////////////////////////////////////////////////
 
 
+if(si_bias==1){
+  if(MG==1){
+    param_bd[0]=-0.284;	// c
+    param_bd[1]=3.365e-3;	// c
+    param_bd[2]=0.594;	// c
+    param_bd[3]=-0.211153;}	// c
+  else{
+    param_bd[0]=-0.347;	// c
+    param_bd[1]=2.38e-2;	// c
+    param_bd[3]=0.607;	// c
+    param_bd[2]=-0.2198;}	// c
+}
 
-//original
-/*  param_bd[0]=2.1023;	// alpha	3
-  param_bd[1]=14.3405;	// beta		4
-  param_bd[2]=3.18533;	// c		5
-  param_bd[3]=1.07798;	// G		6
+if(si_densidad==1){
+if(first_theory==0){
+  param_bd[0]=1.227669e+01;	// alpha
+  param_bd[1]=3.168121e-01;
+  param_bd[2]=1.596831e-08;
+  param_bd[3]=-2.636782e+00;
+  param_bd[4]=1.240896e+00;	// beta
 
-  param_bd[4]=16.6803;	// A		7
-  param_bd[5]=4.87545;	// B		8
-  param_bd[6]=1.019;	// C		9
-*/
+  param_bd[5]=0.;	// rv
+  param_bd[6]=3.959814e-01;
+  param_bd[7]=1.347607e+00;
 
-//	errro3 bias-medido
-  param_bd[0]=8.965;	// alpha	3
-  param_bd[1]=10.583;	// beta		4
-  param_bd[2]=1.38;	// c		5
-  param_bd[3]=1.0802;	// G		6
+  param_bd[8]=0.4;//-1.105609e+01;	// G
+  param_bd[9]=3.612350e-02;
+  param_bd[10]=0.;
+  param_bd[11]=3.;//1.148487e+01;
+  param_bd[12]=0.;//1.079775e-01;
+}
+if(first_theory==3){
+  param_bd[0]=9.790662e+00;	// alpha
+  param_bd[1]=4.664299e-01;
+  param_bd[2]=1.;
+  param_bd[3]=-2.521648e+00;
+  param_bd[4]=1.228912e+00;	// beta
 
-//ley de potencia
-  param_bd[4]=10.915;	// A		7
-  param_bd[5]=0.72;	// A		8
-  param_bd[6]=2.6745;	// B		9
-  param_bd[7]=0.4972;	// B		10
+  param_bd[5]=0.;	// rv
+  param_bd[6]=4.212162e-01;
+  param_bd[7]=1.389330e+00;
 
-//recta y parabola
-  param_bd[4]=1.5;	// A		7
-  param_bd[5]=0.15;	// A		8
-  param_bd[6]=2.5;	// B		9
-  param_bd[7]=0.5;	// B		10
+  param_bd[8]=0.16;//-1.530806e+01;	// G
+  param_bd[9]=8.624882e-02;
+  param_bd[10]=-7.881742e-03;
+  param_bd[11]=2.9;//1.543693e+01;
+  param_bd[12]=0.;//8.092481e-02;
+}
+}
 
 
-  param_bd[Npd+0]=0.557;// b1	11
-  param_bd[Npd+1]=0.4853;// b2	12
-  param_bd[Npd+2]=3.044;	// b3	13
-
-  //	solo externo sin maximo local
-/*  param_bd[0]=1.06;	// alpha	3
-  param_bd[1]=13.1;	// beta		4
-
-  param_bd[4]=0.855;	// A1		7
-  param_bd[5]=0.228;	// A2		8
-  param_bd[6]=4.75;	// B1		9
-*/
 int n_salta;
 if(segunda_vez==1){
   FILE * NOM;
@@ -146,29 +154,32 @@ double chi2=0.;
   double bias_aux,densidad_aux;
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
 
+//      CargaSigma(id_theory);//	pone en sig_actual el sigma correpondiente a id_theory
+//      Spline_interp sigm(radio_xi,sig_actual);
+//      alpha1[id_theory]=param_bd[Npd+0]*sigm.interp(param_bd[Npd+1]);
+
     if(si_bias==1){
       for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-        bias_aux=bias(sigma_bias[id_theory][id_stack]);
+        bias_aux=bias(sigma_bias[id_theory][id_stack],id_theory);
         chi2+=pow((bias_aux - medida_bias[id_theory][id_stack])/error_bias[id_theory][id_stack],2.0);
-//        chi2+=pow((bias_aux - medida_bias2[id_theory][id_stack])/error_bias2[id_theory][id_stack],2.0);
-//        chi2+= pow((bias_aux - (medida_bias[id_theory][id_stack] +medida_bias2[id_theory][id_stack])*0.5),2.0)/(pow(error_bias[id_theory][id_stack],2)*0.25 + pow(error_bias2[id_theory][id_stack],2)*0.25);
       }
     }
 
     if(si_densidad==1){
-      CargaCorrelacion(id_theory);//	pone en xi_actual la correlacion correpondiente a id_theory
-      Spline_interp correl(radio_xi,xi_actual);
-      for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
-        if(bias_teoria==1)	bias_aux = bias(sigma_bias[id_theory][id_stack]);
-        else 			bias_aux = medida_bias[id_theory][id_stack];
-        ParametrosSuppress(id_theory,id_stack);
-        for(int i=0;i<bines_radio_densidad[id_stack];i++){
-          if(densidad_teoria==1)	densidad_aux = PerfilUniversal(radio_densidad[i]);
-          else				densidad_aux = (densidad[1][5][i]+densidad[5][5][i])*0.5;
-          if((i!=19)&&(i!=20))
-            chi2+=pow( (densidad_aux + bias_aux * correl.interp(radio_densidad[i]*radio_stack[id_theory][id_stack]) *  Suppress(radio_densidad[i]) - densidad[id_theory][id_stack][i]) / error_densidad[id_theory][id_stack][i],2.0);
-        }
-      }
+//      CargaCorrelacion(id_theory);//	pone en xi_actual la correlacion correpondiente a id_theory
+//      Spline_interp correl(radio_xi,xi_actual);
+
+//      CargaSigma(id_theory);//	pone en sig_actual el sigma correpondiente a id_theory
+//      Spline_interp sigm(radio_xi,sig_actual);
+//      alpha1[id_theory]=param_bd[Npd+0]*sigm.interp(param_bd[Npd+1]);
+
+
+    for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
+      ParametrosPerfil(id_theory,id_stack);
+      for(int i=0;i<bines_radio_densidad[id_stack];i++)
+        if((i!=19)&&(i!=20))
+        chi2+=pow( (perfil(radio_densidad[i])-densidad[id_theory][id_stack][i]) /error_densidad[id_theory][id_stack][i],2.0);
+    }
     }
 
   }
@@ -221,7 +232,7 @@ int no_tercio=1;
 
   calcula_correlation_fuction=1;	//calcula la funcion de correlacion cuando entre a main_rodrigo
   for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
-    if(id_theory<3)	{param_cosmo[0]=log10(parametro[id_theory]);	MG=1;}
+    if(first_theory<3)	{param_cosmo[0]=log10(parametro[id_theory]);	MG=1;}
     else		{param_cosmo[0]=parametro[id_theory];		MG=2;}
     main_rodrigo(id_theory);	//	calcula P(k,z=0), los sigma de perfiles y la funcion de correlacion materia, usa param_cosmo[0]
   }
@@ -293,7 +304,7 @@ if ((10*(lineal+1))%ciclo_lineal==0){
         delta_param_bd[aux_param]=0.1*(param_bd[aux_param]-param_old[aux_param]);
         if(delta_param_bd[aux_param]==0.)
           delta_param_bd[aux_param]=param_bd[aux_param]*0.0001;
-//        printf("%le %le\n",param_densidad[aux_param][aux_coeff],delta_param_densidad[aux_param][aux_coeff]);
+//        printf("%le %le\n",param_bd[aux_param][aux_coeff],delta_param_bd[aux_param][aux_coeff]);
 }}
 
   //	doy un paso lineal
@@ -342,7 +353,7 @@ if ((10*(lineal+1))%ciclo_lineal==0){
  /*           int todos=0;
             for(int aux_param=0;aux_param<M;aux_param++)
               for(int aux_coeff=0;aux_coeff<N;aux_coeff++)
-                if(delta_param_densidad[aux_param][aux_coeff]!=0.)
+                if(delta_param_bd[aux_param][aux_coeff]!=0.)
                   todos=1;
             if(todos!=0)
             n_avanza++;*/
@@ -467,40 +478,21 @@ fclose(NOM);
 
   //	imprime
   FILE *PLO;
-  sprintf(nomAr,"params_best-fit_bd_%d_%d.dat",first_theory,last_theory);
+for(int id_theory=first_theory;id_theory<=last_theory;id_theory++){
+  sprintf(nomAr,"../%c/params_best-fit_bd_%d_%d.dat",NameTheories[id_theory],first_theory,last_theory);
   PLO=fopen(nomAr,"w+");
-  for(i=0;i<Npd;i++)
-    fprintf(PLO,"Pbd%d=%le\n",i,param_bd[i]);
-  if(si_bias==0){
-    fprintf(PLO,"Pbd%d=%le\n",i,b0);i++;
-    fprintf(PLO,"Pbd%d=%le\n",i,b1);i++;
-    fprintf(PLO,"Pbd%d=%le\n",i,b2);}
-  else
-    for(i=0;i<Npbb;i++)
-      fprintf(PLO,"Pbd%d=%le\n",Npd+i,param_bd[Npd+i]);
+  fprintf(PLO,"b0=%le\n",b1);
+  fprintf(PLO,"b1=%le\n",b2);
+  fprintf(PLO,"b2=%le\n",b3);
+  for(int id_stack=first_stack;id_stack<=last_stack;id_stack++){
+    ParametrosPerfil(id_theory,id_stack);
+    fprintf(PLO,"a%d=%le\n",id_stack,alpha);
+    fprintf(PLO,"b%d=%le\n",id_stack,beta);
+    fprintf(PLO,"A%d=%le\n",id_stack,A);
+    fprintf(PLO,"B%d=%le\n",id_stack,B);
+  }
   fclose(PLO);
-
-  if(bias_teoria==1)
-  for(int t=0;t<7;t++){
-    sprintf(nomAr,"../%c/best-fit_bias_%d_%d.dat",NameTheories[t],first_theory,last_theory);
-    PLO=fopen(nomAr,"w+");
-    for(int s=first_stack;s<=last_stack;s++)
-      fprintf(PLO,"b%d=%le\n",s,bias(sigma_bias[t][s]));
-    for(int s=first_stack;s<=last_stack;s++)
-      fprintf(PLO,"r%d=%le\n",s,radio_stack[t][s]);
-    fclose(PLO);
-  }
-  else
-  for(int t=0;t<7;t++){
-    sprintf(nomAr,"../%c/best-fit_bias_%d_%d.dat",NameTheories[t],first_theory,last_theory);
-    PLO=fopen(nomAr,"w+");
-    for(int s=first_stack;s<=last_stack;s++)
-      fprintf(PLO,"b%d=%le\n",s,medida_bias[t][s]);
-    for(int s=first_stack;s<=last_stack;s++)
-      fprintf(PLO,"r%d=%le\n",s,radio_stack[t][s]);
-    fclose(PLO);
-  }
-
+}
 
 
 

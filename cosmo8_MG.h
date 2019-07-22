@@ -371,6 +371,7 @@ if((si_bias==1)||(si_densidad==1)){
     sigma_bias[id_theory][s] = sqrt(calc_sigma(nk,rad));
 //printf("%le %le %le\n",radio_stack[id_theory][s],radio_bias[id_theory][s],sigma_bias[id_theory][s]);
   }
+  sigma_7[id_theory]=sqrt(calc_sigma(nk,7.0));		//	sigma(r=7Mpc/h), is will be used to improve the bias fit
 }
 
 
@@ -438,18 +439,22 @@ if(calcula_correlation_fuction==1){
   for(double rad=5.e-3; rad<2.; rad+=1.e-1){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
+    sig[id_theory][id_xi]=calc_sigma(nk,rad);
     id_xi++;}
   for(double rad=2.; rad<11.; rad+=2.e-1){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
+    sig[id_theory][id_xi]=calc_sigma(nk,rad);
     id_xi++;}
   for(double rad=11.; rad<20.; rad+=5.e-1){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
+    sig[id_theory][id_xi]=calc_sigma(nk,rad);
     id_xi++;}
   for(double rad=20.; rad<120.; rad+=1.e-0){
     radio_xi[id_xi]=rad;
     xi[id_theory][id_xi]=calc_xi(rad);
+    sig[id_theory][id_xi]=calc_sigma(nk,rad);
     id_xi++;}//printf("id_xi=%d\n",id_xi);fflush(stdout);
 
 

@@ -4,8 +4,9 @@
 //const double H0=71.9;
 
 
-  const int first_theory=0;
-  const int  last_theory=6;
+  int first_theory=3;
+  int  last_theory=6;
+  int MG=2;
 
 
 //	from planck_2018.ini
@@ -77,7 +78,7 @@ int imprime_correlation_fuction;
 //char NameTheories[]={'D','B','A','l','6','5','4'};
 //normal
 char NameTheories[]={'4','5','6','l','A','B','D'};
-  const double parametro[]={1.000000e-04,1.000000e-05,1.000000e-06,1.000000e-08,1.000000e-00,2.000000e-00,3.000000e-00};
+  const double parametro[]={1.000000e-04,1.000000e-05,1.000000e-06,1.000000e-12,1.000000e-00,2.000000e-00,3.000000e-00};
 
 
 
@@ -88,7 +89,7 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   const double dcc=1.686;
   const double pi=4.*atan(1.);
   const int theories=7;
-  int MG;
+
   double mean[Np],stdev[Np]; int contador;	//	analisis
   double ChiMax, ChiMin, param_cosmo[Np],delta[Np],sigma_param_cosmo[Np]; //	variables basicas
   double pMax[Np], pMin[Np], ChiOld, ChiNew;		//	variables auxiliares
@@ -113,9 +114,9 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   const double si_segunda_potencia=1.;
 
   //	bines para la abundancia
-  const int       bin_abundancia=8;
+  const int       bin_abundancia=15;
   const int first_bin_abundancia=0;
-  const int  last_bin_abundancia=7;
+  const int  last_bin_abundancia=12;
   //	para imprimir el mejor ajuste
   const int bin_print_abundance=200;
 
@@ -126,6 +127,7 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   double dsigma_abundancia[theories][bin_abundancia];
   //	prediccion para la abundancia
   double teoria_abundancia[theories][bin_abundancia];
+  double prefac_abundancia[theories][bin_abundancia];
 
   //	medida abundancia
   double radio_abundancia[theories][bin_abundancia];
@@ -152,7 +154,7 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   #define uniformiza_densidad 1
   #define densidad_integrada 0
 
-  double A,B;
+  double A,B,C;
 
   //	bines stack a analizar
   const int   bin_stack=8;
@@ -175,18 +177,20 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   double dc=0.867554;
   const int max_id_xi=184;		//	 id_xi en cosmo8_MG.c
   double xi[theories][max_id_xi];		//	funcion de correlacion, todas las teorias
-  VecDoub radio_xi(max_id_xi),xi_actual(max_id_xi);	//	funcion de correlacion actual para interpolar:
-
-
-
-
+  double sig[theories][max_id_xi];		//	sigma, todas las teorias
+  VecDoub radio_xi(max_id_xi),xi_actual(max_id_xi),sig_actual(max_id_xi);	//	funcion de correlacion y sigma actual para interpolar:
+  double sigma_7[7];				//	sigma^-1(r=7 Mpc/h) for each theory, it will help to improve the bias fit
+  double bias0[7];
+  double alpha0[7];				//	factor for the alpha power in the profile
+  double alpha1[7];				//	power for the bias
+  double param_densidad[13];
 
 
 
 
 
   //	bias
-  double b0,b1,b2;
+  double b0,b1,b2,b3,b4,b5,b6,b7,b8;
   double  sigma_bias[theories][bin_stack];	//	rodrigo
 
   double  radio_bias[theories][bin_stack];	//	medida espectro
@@ -197,12 +201,12 @@ char NameTheories[]={'4','5','6','l','A','B','D'};
   double medida_bias2[theories][bin_stack];	//	medida perfil
   double  error_bias2[theories][bin_stack];	//	medida perfil
 //4+1+7
-  #define Npd 8	//	densidad: parametros geometricos, c,a,b,G; d1,d2,l1,l2		Number of Parameters for Density
-  #define Npbb 3		//	bias: coeficientes, potencias, cortes, constantes
+  #define Npd 13	//	densidad: parametros geometricos, c,a,b,G; d1,d2,l1,l2		Number of Parameters for Density
+  #define Npbb 4*0		//	bias: coeficientes, potencias, cortes, constantes
   #define Npbd (Npd+Npbb)	//	juntando los dos anteriores
   //	parametros libres del modelo conjunto bias perfil
   double param_bd[Npbd];
-
+  const int same_error_bias=0;
 
 
 
